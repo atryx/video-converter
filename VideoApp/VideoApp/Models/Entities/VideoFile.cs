@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace VideoApp.Web.Models.Entities
@@ -8,16 +9,15 @@ namespace VideoApp.Web.Models.Entities
         [Key]
         public int Id { get; set; }
         public string Filename { get; set; }
-        public string FormatName { get; set; }
-        public string StartTime { get; set; }
-        public string Duration { get; set; }
-        public string Size { get; set; }
-        public string BitRate { get; set; }
-        public string CodecName { get; set; }
+        public TimeSpan Duration { get; set; }
+        public long Size { get; set; }
+        public string Codec { get; set; }
         public int Height { get; set; }
         public int Width { get; set; }
-        public string SampleAspectRatio { get; set; }
-        public string DisplayAspectRatio { get; set; }
+        public double Framerate { get; set; }
+        public string Ratio { get; set; }
+        public long BitRate { get; set; }
+        public string PixelFormat { get; set; }
         public Status Status { get; set; } = Status.FileUploaded;
         public int? ParentVideoFileId { get; set; }
         public virtual VideoFile ParentVideoFile { get; set; }

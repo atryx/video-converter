@@ -27,10 +27,11 @@ namespace VideoApp.Web.Utilities
             }
         }
 
-        public async Task ConvertToOtherFormat(string inputPath, string outputPath, OutputFormat format)
+        public async Task ConvertToOtherFormat(string inputFile, string outputFile, OutputFormat format)
         {
             var videoSize = _mapper.Map<VideoSize>(format);
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "uploads", inputPath));
+            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputFile));
+            string output = Path.Combine(_basePath, "Uploads", outputFile);
 
             IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
                 ?.SetCodec(VideoCodec.h264)
@@ -42,13 +43,13 @@ namespace VideoApp.Web.Utilities
 
             await FFmpeg.Conversions.New()
                 .AddStream(audioStream, videoStream)
-                .SetOutput(outputPath)
+                .SetOutput(output)
                 .Start();
         }
 
         public async Task GetVideoThumbails(string inputPath, string outputPath, int wantedSeconds)
         {
-            string output = Path.Combine(_basePath, "uploads", Guid.NewGuid() + outputPath + ".png");
+            string output = Path.Combine(_basePath, "Uploads", Guid.NewGuid() + outputPath + ".png");
 
             IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath, output, TimeSpan.FromSeconds(wantedSeconds));
             IConversionResult result = await conversion.Start();
@@ -57,7 +58,7 @@ namespace VideoApp.Web.Utilities
             IConversion conversion2 = await FFmpeg.Conversions.FromSnippet.Split(inputPath, output, TimeSpan.FromSeconds(wantedSeconds), TimeSpan.FromSeconds(wantedSeconds));
             IConversionResult result2 = await conversion.Start();
 
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "uploads", inputPath));
+            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
             IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault();
 
             IConversionResult result3 = await FFmpeg.Conversions.New()
@@ -74,7 +75,7 @@ namespace VideoApp.Web.Utilities
         {
             string output = Path.Combine(_basePath, "uploads", Guid.NewGuid() + outputPath + ".png");
 
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "uploads", inputPath));
+            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
             IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault();
             IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault();
 
@@ -91,6 +92,11 @@ namespace VideoApp.Web.Utilities
             //-vf scale = w = 842:h = 480:force_original_aspect_ratio = decrease - c:a aac -ar 48000 - c:v h264 -profile:v main -crf 20 - sc_threshold 0 - g 48 - keyint_min 48 - hls_time 4 - hls_playlist_type vod - b:v 1400k - maxrate 1498k - bufsize 2100k - b:a 128k - hls_segment_filename beach / 480p_ % 03d.ts beach / 480p.m3u8 \
             //-vf scale = w = 1280:h = 720:force_original_aspect_ratio = decrease - c:a aac -ar 48000 - c:v h264 -profile:v main -crf 20 - sc_threshold 0 - g 48 - keyint_min 48 - hls_time 4 - hls_playlist_type vod - b:v 2800k - maxrate 2996k - bufsize 4200k - b:a 128k - hls_segment_filename beach / 720p_ % 03d.ts beach / 720p.m3u8 \
             //-vf scale = w = 1920:h = 1080:force_original_aspect_ratio = decrease - c:a aac -ar 48000 - c:v h264 -profile:v main -crf 20 - sc_threshold 0 - g 48 - keyint_min 48 - hls_time 4 - hls_playlist_type vod - b:v 5000k - maxrate 5350k - bufsize 7500k - b:a 192k - hls_segment_filename beach / 1080p_ % 03d.ts beach / 1080p.m3u8
+        }
+
+        public async Task<IMediaInfo> GetMediaInfo(string inputPath)
+        {
+            return await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
         }
     }
 }

@@ -15,11 +15,11 @@ namespace FFmpegUtilities
             UseShellExecute = false,
             RedirectStandardError = true,
             RedirectStandardOutput = true
-    };
+        };
 
         public bool ExecuteCommand(ProcessStartParameters parameters)
         {
-            
+
             using (process = new Process())
             {
                 try
@@ -28,7 +28,7 @@ namespace FFmpegUtilities
                     process.StartInfo.Arguments = parameters.Arguments;
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
-                    process.Start();                 
+                    process.Start();
 
                     process.WaitForExit();
                     var processExecutedSuccesfully = process.ExitCode == 0;

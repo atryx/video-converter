@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using FFmpegUtilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -7,66 +6,61 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using VideoApp.FFmpegUtilities.Models;
 using VideoApp.Web.Database;
+using VideoApp.Web.JobQueue;
 using VideoApp.Web.Models;
 using VideoApp.Web.Models.DTOs;
 using VideoApp.Web.Models.Entities;
 using VideoApp.Web.Models.ViewModels;
 using VideoApp.Web.TaskRunner;
+using VideoApp.Web.Utilities;
 
 namespace VideoApp.Web.Services
 {
     public class VideoConverterService : IVideoConverterService
     {
-        private readonly JobRunnerQueue _jobRunner = new JobRunnerQueue();
-        private readonly CommandExecuter _commandExecuter = new CommandExecuter();
+        private readonly IJobRunnerQueue _jobRunner;
+        private readonly IFFmpegWraperService _ffmpeg;
         private IHostEnvironment _hostingEnvironment;
         private readonly VideoInformationContext _dbContext;
         private readonly IMapper _mapper;
 
         public VideoConverterService(IHostEnvironment environment,
             VideoInformationContext context,
-            IMapper mapper)
+            IMapper mapper,
+            IJobRunnerQueue jobRunner,
+            IFFmpegWraperService ffmpeg)
         {
             _hostingEnvironment = environment;
             _dbContext = context;
             _mapper = mapper;
-
+            _jobRunner = jobRunner;
+            _ffmpeg = ffmpeg;
         }
 
         public async Task<VideoFileModel> ConvertToOtherFormat(FileUploadDTO fileUpload)
         {
             string convertCommandArguments = string.Empty;
             string uniqueFileName = Guid.NewGuid() + "_" + fileUpload.UploadedFile.FileName;
+            // TODO move this in another services, should return a bool if save is succesfull
             string fullFilePath = await SaveTempFile(fileUpload.UploadedFile, uniqueFileName);
-            string convertedFileName = $"{fullFilePath.Substring(0, fullFilePath.LastIndexOf('.'))}_{fileUpload.DesiredResolution.Width}x{fileUpload.DesiredResolution.Height}.mkv";
-            var videoInformation = _commandExecuter.GetVideo(fullFilePath);
-            foreach (var stream in videoInformation.Streams)
-            {
-                if (stream.CodecType.Equals("video") && stream.CodecName.Equals("h264"))
-                {
-                    convertCommandArguments = $"-i {fullFilePath} -vf scale={fileUpload.DesiredResolution.Width}:{fileUpload.DesiredResolution.Height}" +
-                        $" -crf 18 -preset slow -c:a copy {convertedFileName}";
-                }
-                else
-                {
-                    convertCommandArguments = $"-i {fullFilePath} -vf scale={fileUpload.DesiredResolution.Width}:{fileUpload.DesiredResolution.Height}" +
-                                            $" -c:v libx264 -crf 18 -preset slow -c:a copy {convertedFileName}";
-                }
-                break;
-            }
-            var videoFile = _mapper.Map<VideoFile>(videoInformation);
+            string outputFile = $"{uniqueFileName.Substring(0, uniqueFileName.LastIndexOf('.'))}_" +
+                $"{fileUpload.OutputFormat}." +
+                $"{uniqueFileName.Substring(uniqueFileName.LastIndexOf('.'))}";
+            var mediaInfo = await  _ffmpeg.GetMediaInfo(uniqueFileName);
+            var videoFile = _mapper.Map<VideoFile>(mediaInfo);
+            videoFile.Filename = uniqueFileName;
             _dbContext.Videos.Add(videoFile);
             await _dbContext.SaveChangesAsync();
+
             int id = videoFile.Id;
 
-            _jobRunner.Enqueue(new ProcessStartParameters()
+            _jobRunner.Enqueue(new FFmpegArguments()
             {
-                ConvertedVideoFullPath = convertedFileName,
-                ParentVideoFileId = id,
-                Command = "ffmpeg",
-                Arguments = convertCommandArguments
+                OutputFile = outputFile,
+                ParentVideoId = id,
+                InputFile = uniqueFileName,
+                OutputFormat = fileUpload.OutputFormat
             });
             _jobRunner.JobFinished += c_JobFinished;
 
@@ -75,9 +69,17 @@ namespace VideoApp.Web.Services
 
         void c_JobFinished(object sender, CustomEventArgs e)
        {
-            Console.WriteLine("FFMPEG finished executing the process");
-            UpdateVideoStatus(e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
-            SaveVideoFile(e.ConvertedFileFullpath, e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+            try
+            {
+                UpdateVideoStatus(e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+                SaveVideoFile(e.OutputFile, e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+            }
+            catch (Exception ex)
+            {
+                
+                throw new Exception(ex.Message);
+            }
+            
         }
 
         public async Task UpdateVideoStatus(int id, Status status)
@@ -87,11 +89,13 @@ namespace VideoApp.Web.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<VideoFile> SaveVideoFile(string fullFilePath, int parentId = default, Status status = default)
+        public async Task<VideoFile> SaveVideoFile(string fileName, int parentId = default, Status status = default)
         {
-            var videoInformation = _commandExecuter.GetVideo(fullFilePath);
-            var videoFile = _mapper.Map<VideoFile>(videoInformation);
+            //var videoInformation = _commandExecuter.GetVideo(fullFilePath);
+            var mediaInfo = await _ffmpeg.GetMediaInfo(fileName);
+            var videoFile = _mapper.Map<VideoFile>(mediaInfo);
             videoFile.ParentVideoFileId = parentId;
+            videoFile.Filename = fileName;
             videoFile.Status = status;
             _dbContext.Videos.Add(videoFile);
             await _dbContext.SaveChangesAsync();
@@ -156,11 +160,12 @@ namespace VideoApp.Web.Services
                 convertCommandArguments += $"-ss {timestamp} -vframes 1 {fileNameWOExtension}_{i}.png";
                 i++;
             }
-            _jobRunner.Enqueue(new ProcessStartParameters()
+            _jobRunner.Enqueue(new FFmpegArguments()
             {
-                ParentVideoFileId = videoFile.Id,
-                Command = "ffmpeg",
-                Arguments = convertCommandArguments
+                ParentVideoId = videoFile.Id,
+                InputFile = videoFile.Filename,
+                OutputFile = "something",
+                OutputFormat = OutputFormat.Hd720
             });
             _jobRunner.JobFinished += c_JobFinished;
 

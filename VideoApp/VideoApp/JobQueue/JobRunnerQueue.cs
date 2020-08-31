@@ -1,19 +1,26 @@
-﻿using FFmpegUtilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using VideoApp.FFmpegUtilities.Models;
+using System.Threading.Tasks;
+using VideoApp.Web.JobQueue;
+using VideoApp.Web.Models;
+using VideoApp.Web.Utilities;
 
 namespace VideoApp.Web.TaskRunner
 {
-    public class JobRunnerQueue
+    public class JobRunnerQueue : IJobRunnerQueue
     {
         public event EventHandler<CustomEventArgs> JobFinished;
 
         private Queue<object> _jobs = new Queue<object>();
         private bool _delegateQueuedOrRunning = false;
         //private BlockingCollection<object> _jobs = new BlockingCollection<object>();
-        private CommandExecuter _commandExecuter = new CommandExecuter();
+        private readonly IFFmpegWraperService _ffmpegWraper;
+
+        public JobRunnerQueue(IFFmpegWraperService ffmpegWraper)
+        {
+            _ffmpegWraper = ffmpegWraper;
+        }
 
         //public JobRunnerQueue()
         //{
@@ -30,11 +37,11 @@ namespace VideoApp.Web.TaskRunner
                 if (!_delegateQueuedOrRunning)
                 {
                     _delegateQueuedOrRunning = true;
-                    ThreadPool.UnsafeQueueUserWorkItem(ProcessQueuedItems, null);
+                    ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(ProcessQueuedItems), null);
                 }
             }
         }
-        private void ProcessQueuedItems(object ignored)
+        private async void ProcessQueuedItems(object ignored)
         {
             while (true)
             {
@@ -52,14 +59,15 @@ namespace VideoApp.Web.TaskRunner
 
                 try
                 {
-                    var processStartParameters = (ProcessStartParameters)item;
-                    var result = _commandExecuter.ExecuteCommand(processStartParameters);
-                    var myEvents = new CustomEventArgs(processStartParameters.ParentVideoFileId, processStartParameters.ConvertedVideoFullPath, result);
+                    var ffmpegArguments = (FFmpegArguments)item;
+                    await _ffmpegWraper.ConvertToOtherFormat(ffmpegArguments.InputFile, ffmpegArguments.OutputFile, ffmpegArguments.OutputFormat);
+                    //var result = _commandExecuter.ExecuteCommand(processStartParameters);
+                    var myEvents = new CustomEventArgs(ffmpegArguments.ParentVideoId, ffmpegArguments.OutputFile, true);
                     OnJobFinished(myEvents);
                 }
                 catch(Exception ex)
                 {
-                    ThreadPool.UnsafeQueueUserWorkItem(ProcessQueuedItems, null);
+                    ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(ProcessQueuedItems), null);
                     throw;
                 }
             }
@@ -85,14 +93,14 @@ namespace VideoApp.Web.TaskRunner
     public class CustomEventArgs : EventArgs
     {
         public int ParentVideoFileId { get; private set; }
-        public string ConvertedFileFullpath { get; private set; }
+        public string OutputFile { get; private set; }
 
         public bool ConversionResult { get; set; }
 
         public CustomEventArgs(int parentId, string fullPath, bool conversionResult) : base()
         {
             this.ParentVideoFileId = parentId;
-            this.ConvertedFileFullpath = fullPath;
+            this.OutputFile = fullPath;
             this.ConversionResult = conversionResult;
         }
     }

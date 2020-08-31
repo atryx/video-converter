@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoApp.Web.Database;
 
 namespace VideoApp.Web.Migrations
 {
     [DbContext(typeof(VideoInformationContext))]
-    partial class VideoInformationContextModelSnapshot : ModelSnapshot
+    [Migration("20200831164613_RefactoredVideoFile")]
+    partial class RefactoredVideoFile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

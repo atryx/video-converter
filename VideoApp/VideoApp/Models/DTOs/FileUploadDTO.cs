@@ -8,6 +8,6 @@ namespace VideoApp.Web.Models
         [Required]
         public IFormFile UploadedFile { get; set; }
         [Required]
-        public Resolution DesiredResolution { get; set; }        
+        public OutputFormat OutputFormat { get; set; }        
     }
 }
