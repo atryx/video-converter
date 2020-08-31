@@ -6,7 +6,7 @@ using VideoApp.FFmpegUtilities.Models;
 
 namespace VideoApp.Web.TaskRunner
 {
-    public class JobRunnerQueue : IJobRunnerQueue
+    public class JobRunnerQueue
     {
         public event EventHandler<CustomEventArgs> JobFinished;
 

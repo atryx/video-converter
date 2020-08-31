@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using VideoApp.Web.Database;
 using VideoApp.Web.Services;
 using VideoApp.Web.TaskRunner;
+using VideoApp.Web.Utilities;
 
 namespace VideoApp
 {
@@ -33,7 +34,7 @@ namespace VideoApp
             
 
             services.AddScoped<IVideoConverterService, VideoConverterService>();
-            //services.AddScoped<IJobRunnerQueue, JobRunnerQueue>();
+            services.AddScoped<IFFmpegWraperService, FFmpegWraperService>();
             //services.AddScoped<ICommandExecuter, CommandExecuter>();
         }
 

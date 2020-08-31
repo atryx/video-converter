@@ -100,7 +100,7 @@ namespace VideoApp.Web.Services
 
         private async Task<string> SaveTempFile(IFormFile file, string fileName)
         {
-            var uploads = Path.Combine(_hostingEnvironment.ContentRootPath, "TempLocation");
+            var uploads = Path.Combine(_hostingEnvironment.ContentRootPath, "Uploads");
             if (file.Length > 0)
             {
                 var filePath = Path.Combine(uploads, fileName);

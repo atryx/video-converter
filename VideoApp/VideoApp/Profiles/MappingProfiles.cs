@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VideoApp.FFmpegUtilities.Models;
+using VideoApp.Web.Models;
 using VideoApp.Web.Models.Entities;
 using VideoApp.Web.Models.ViewModels;
+using Xabe.FFmpeg;
 
 namespace VideoApp.Web.Profiles
 {
@@ -32,7 +34,7 @@ namespace VideoApp.Web.Profiles
             CreateMap<VideoFile, VideoFileModel>()
                 .ForMember(dest => dest.Resolution, opt => opt.MapFrom(src => $"{src.Width}:{src.Height}"))
                 .ReverseMap();
-            //CreateMap<List<VideoFile>, List<VideoFileModel>>().ReverseMap();
+            CreateMap<OutputFormat,VideoSize>();
         }
         
     }
