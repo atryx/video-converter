@@ -12,6 +12,6 @@ namespace VideoApp.Web.Services
 
         Task<List<VideoFileModel>> GetAvailableVideos();
 
-        Task<List<ThumbnailModel>> GetThumbnails(int videoId, ThumbnailDTO thumbnailDTO);
+        Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO);
     }
 }

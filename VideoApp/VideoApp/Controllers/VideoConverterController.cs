@@ -41,10 +41,10 @@ namespace VideoApp.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{videoId}")]
-        public async Task<ActionResult<List<ThumbnailModel>>> GetThumbnails([FromBody]ThumbnailDTO thumbnailDTO, int videoId)
+        [HttpPost("thumbnails")]
+        public async Task<ActionResult<List<ThumbnailModel>>> GetThumbnails([FromBody]ThumbnailDTO thumbnailDTO)
         {
-            var result = await _videoConverterService.GetThumbnails(videoId, thumbnailDTO);
+            var result = await _videoConverterService.GetThumbnails(thumbnailDTO);
             return Ok(result);
         }
     }

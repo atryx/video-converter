@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using VideoApp.Web.Database;
 using VideoApp.Web.JobQueue;
@@ -91,7 +92,6 @@ namespace VideoApp.Web.Services
 
         public async Task<VideoFile> SaveVideoFile(string fileName, int parentId = default, Status status = default)
         {
-            //var videoInformation = _commandExecuter.GetVideo(fullFilePath);
             var mediaInfo = await _ffmpeg.GetMediaInfo(fileName);
             var videoFile = _mapper.Map<VideoFile>(mediaInfo);
             videoFile.ParentVideoFileId = parentId;
@@ -149,27 +149,21 @@ namespace VideoApp.Web.Services
             }
         }
 
-        public async Task<List<ThumbnailModel>> GetThumbnails(int videoId, ThumbnailDTO thumbnailDTO)
+        public async Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO)
         {
-            var videoFile = await GetVideo(videoId);
-            string convertCommandArguments = $"-i {videoFile.Filename}";
-            string fileNameWOExtension = videoFile.Filename.Substring(0, videoFile.Filename.LastIndexOf('.'));
-            int i = 1;
-            foreach (var timestamp in thumbnailDTO.TimestampOfScreenshots)
-            {
-                convertCommandArguments += $"-ss {timestamp} -vframes 1 {fileNameWOExtension}_{i}.png";
-                i++;
-            }
-            _jobRunner.Enqueue(new FFmpegArguments()
-            {
-                ParentVideoId = videoFile.Id,
-                InputFile = videoFile.Filename,
-                OutputFile = "something",
-                OutputFormat = OutputFormat.Hd720
-            });
-            _jobRunner.JobFinished += c_JobFinished;
+            var videoFile = await GetVideo(thumbnailDTO.VideoId);
+      
+            var result = await _ffmpeg.GetVideoThumbails(videoFile.Filename, thumbnailDTO.TimestampOfScreenshots);
+            //_jobRunner.Enqueue(new FFmpegArguments()
+            //{
+            //    ParentVideoId = videoFile.Id,
+            //    InputFile = videoFile.Filename,
+            //    OutputFile = "something",
+            //    OutputFormat = OutputFormat.Hd720
+            //});
+            //_jobRunner.JobFinished += c_JobFinished;
 
-            return new List<ThumbnailModel>();
+            return result;
         }
     }
 }

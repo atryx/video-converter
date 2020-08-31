@@ -7,6 +7,7 @@ namespace VideoApp.Web.Models.DTOs
 {
     public class ThumbnailDTO
     {
-        public List<string> TimestampOfScreenshots { get; set; }
+        public int VideoId { get; set; }
+        public List<int> TimestampOfScreenshots { get; set; }
     }
 }

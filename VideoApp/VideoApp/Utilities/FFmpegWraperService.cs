@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using VideoApp.Web.Models;
+using VideoApp.Web.Models.ViewModels;
 using Xabe.FFmpeg;
 
 namespace VideoApp.Web.Utilities
@@ -47,28 +49,24 @@ namespace VideoApp.Web.Utilities
                 .Start();
         }
 
-        public async Task GetVideoThumbails(string inputPath, string outputPath, int wantedSeconds)
+        public async Task<List<ThumbnailModel>> GetVideoThumbails(string inputFile, List<int> wantedSeconds)
         {
-            string output = Path.Combine(_basePath, "Uploads", Guid.NewGuid() + outputPath + ".png");
+            string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
+            var thumbnails = new List<ThumbnailModel>();
+            foreach (var second in wantedSeconds)
+            {
+                var thumbnail = new ThumbnailModel();
+                thumbnail.Name = $"{inputFile.Substring(0, inputFile.LastIndexOf('.'))}_{second}.png";
+                thumbnail.Timestamp = TimeSpan.FromSeconds(second);
+                thumbnail.Format = "png";
+                thumbnails.Add(thumbnail);
+                IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath, thumbnail.Name, TimeSpan.FromSeconds(second));
+                IConversionResult result = await conversion.Start();
 
-            IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath, output, TimeSpan.FromSeconds(wantedSeconds));
-            IConversionResult result = await conversion.Start();
+            }
 
+            return thumbnails;
             
-            IConversion conversion2 = await FFmpeg.Conversions.FromSnippet.Split(inputPath, output, TimeSpan.FromSeconds(wantedSeconds), TimeSpan.FromSeconds(wantedSeconds));
-            IConversionResult result2 = await conversion.Start();
-
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
-            IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault();
-
-            IConversionResult result3 = await FFmpeg.Conversions.New()
-                    .AddStream(videoStream)
-                    .AddParameter($"-ss {TimeSpan.FromSeconds(wantedSeconds)}")
-                    .AddParameter("-frames:v 1")
-                    .AddParameter("-s 1920x1080")
-                    .AddParameter("-an")
-                    .SetOutput(output)
-                    .Start();
         }
 
         public async Task GenerateHLS(string inputPath, string outputPath)
