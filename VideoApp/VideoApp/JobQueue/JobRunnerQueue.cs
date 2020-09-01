@@ -60,10 +60,18 @@ namespace VideoApp.Web.TaskRunner
                 try
                 {
                     var ffmpegArguments = (FFmpegArguments)item;
-                    await _ffmpegWraper.ConvertToOtherFormat(ffmpegArguments.InputFile, ffmpegArguments.OutputFile, ffmpegArguments.OutputFormat);
-                    //var result = _commandExecuter.ExecuteCommand(processStartParameters);
-                    var myEvents = new CustomEventArgs(ffmpegArguments.ParentVideoId, ffmpegArguments.OutputFile, true);
-                    OnJobFinished(myEvents);
+                    if (ffmpegArguments.Operation.Equals(OperationType.Conversion))
+                    {
+                        await _ffmpegWraper.ConvertToOtherFormat(ffmpegArguments.InputFile, ffmpegArguments.OutputFile, ffmpegArguments.OutputFormat);
+                        var myEvents = new CustomEventArgs(ffmpegArguments.ParentVideoId, ffmpegArguments.OutputFile, ffmpegArguments.Operation);
+                        OnJobFinished(myEvents);
+                    }
+                    else
+                    {
+                        var output = await _ffmpegWraper.GenerateHLS(ffmpegArguments.InputFile, ffmpegArguments.OutputFormat);
+                        var myEvents = new CustomEventArgs(ffmpegArguments.ParentVideoId, output, ffmpegArguments.Operation);
+                        OnJobFinished(myEvents);
+                    }
                 }
                 catch(Exception ex)
                 {
@@ -95,13 +103,13 @@ namespace VideoApp.Web.TaskRunner
         public int ParentVideoFileId { get; private set; }
         public string OutputFile { get; private set; }
 
-        public bool ConversionResult { get; set; }
+        public OperationType Operation { get; set; }
 
-        public CustomEventArgs(int parentId, string fullPath, bool conversionResult) : base()
+        public CustomEventArgs(int parentId, string fullPath, OperationType operation) : base()
         {
             this.ParentVideoFileId = parentId;
             this.OutputFile = fullPath;
-            this.ConversionResult = conversionResult;
+            this.Operation = operation;
         }
     }
 }

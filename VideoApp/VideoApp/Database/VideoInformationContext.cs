@@ -18,6 +18,8 @@ namespace VideoApp.Web.Database
         public DbSet<VideoFile> Videos { get; set; }
         public DbSet<Thumbnail> Thumbnails { get; set; }
 
+        public DbSet<HLSFile> HLS { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AvailableResolution>().ToTable("AvailableResolutions");
@@ -27,10 +29,11 @@ namespace VideoApp.Web.Database
                         v => v.ToString(),
                         v => (Status)Enum.Parse(typeof(Status), v));
             modelBuilder.Entity<VideoFile>().ToTable("Videos")
-                    .HasMany(v => v.DifferentResolutionsFile)
+                    .HasMany(v => v.AvailableResolutions)
                     .WithOne(p => p.ParentVideoFile)
                     .HasForeignKey(c => c.ParentVideoFileId);
             modelBuilder.Entity<Thumbnail>().ToTable("Thumbnails");
+            modelBuilder.Entity<HLSFile>().ToTable("HLS");
         }
     }
 }

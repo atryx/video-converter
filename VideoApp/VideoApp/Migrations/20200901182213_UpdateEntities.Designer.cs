@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoApp.Web.Database;
 
 namespace VideoApp.Web.Migrations
 {
     [DbContext(typeof(VideoInformationContext))]
-    partial class VideoInformationContextModelSnapshot : ModelSnapshot
+    [Migration("20200901182213_UpdateEntities")]
+    partial class UpdateEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,32 +40,6 @@ namespace VideoApp.Web.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AvailableResolutions");
-                });
-
-            modelBuilder.Entity("VideoApp.Web.Models.Entities.HLSFile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("HLSType")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ParentVideoFileId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ParentVideoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentVideoFileId");
-
-                    b.ToTable("HLS");
                 });
 
             modelBuilder.Entity("VideoApp.Web.Models.Entities.Thumbnail", b =>
@@ -141,13 +117,6 @@ namespace VideoApp.Web.Migrations
                     b.HasIndex("ParentVideoFileId");
 
                     b.ToTable("Videos");
-                });
-
-            modelBuilder.Entity("VideoApp.Web.Models.Entities.HLSFile", b =>
-                {
-                    b.HasOne("VideoApp.Web.Models.Entities.VideoFile", "ParentVideoFile")
-                        .WithMany("HLSFile")
-                        .HasForeignKey("ParentVideoFileId");
                 });
 
             modelBuilder.Entity("VideoApp.Web.Models.Entities.Thumbnail", b =>

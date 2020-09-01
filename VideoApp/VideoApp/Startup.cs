@@ -24,7 +24,7 @@ namespace VideoApp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
             services.AddAutoMapper(typeof(Startup));
 
             services.AddDbContext<VideoInformationContext>(options =>

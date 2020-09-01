@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,27 +58,15 @@ namespace VideoApp.Web.Services
                 OutputFile = outputFile,
                 ParentVideoId = id,
                 InputFile = uniqueFileName,
-                OutputFormat = fileUpload.OutputFormat
+                OutputFormat = fileUpload.OutputFormat,
+                Operation = OperationType.Conversion
             });
             _jobRunner.JobFinished += c_JobFinished;
 
             return _mapper.Map<VideoFileModel>(videoFile);
         }
 
-        void c_JobFinished(object sender, CustomEventArgs e)
-       {
-            try
-            {
-                UpdateVideoStatus(e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
-                SaveVideoFile(e.OutputFile, e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
-            }
-            catch (Exception ex)
-            {
-                
-                throw new Exception(ex.Message);
-            }
-            
-        }
+       
 
         public async Task UpdateVideoStatus(int id, Status status)
         {
@@ -104,8 +90,9 @@ namespace VideoApp.Web.Services
         public async Task<List<VideoFileModel>> GetAvailableVideos()
         {
             var dbList = await _dbContext.Videos.Where(v => v.ParentVideoFileId == null)
-                .Include("DifferentResolutionsFile")
+                .Include("AvailableResolutions")
                 .Include("Thumbnails")
+                .Include("HLSFiles")
                 .ToListAsync();
 
             return _mapper.Map<List<VideoFileModel>>(dbList);
@@ -133,7 +120,57 @@ namespace VideoApp.Web.Services
         {
             var videoFile = await GetVideo(hlsDTO.VideoId);
 
-            await _ffmpeg.GenerateHLS(videoFile.Filename, OutputFormat format);
+            _jobRunner.Enqueue(new FFmpegArguments()
+            {
+                ParentVideoId = videoFile.Id,
+                InputFile = videoFile.Filename,
+                OutputFormat = hlsDTO.OutputFormat,
+                Operation = OperationType.HLS
+            });
+            _jobRunner.JobFinished += c_JobFinished;            
+        }
+
+        public async Task<List<HLSFile>> SaveHLSBatch(string path, OutputFormat format, int parentVideoId)
+        {
+
+            var savedFiles = Directory.GetFiles(path, $"{format}*");
+            var hlsFiles = new List<HLSFile>();
+            foreach (var file in savedFiles)
+            {
+                var extension = file.Substring(file.LastIndexOf('.'));
+                var hls = new HLSFile
+                {
+                    FileName = file,
+                    ParentVideoId = parentVideoId,
+                    HLSType = extension.Equals("m3u8") ? HLSType.Playlist : HLSType.PartialVideo
+                };
+                hlsFiles.Add(hls);
+            }
+            _dbContext.HLS.AddRange(hlsFiles);
+            await _dbContext.SaveChangesAsync();
+            return hlsFiles;
+        }
+
+        void c_JobFinished(object sender, CustomEventArgs e)
+        {
+            try
+            {
+                if (e.Operation.Equals(OperationType.Conversion))
+                {
+                    UpdateVideoStatus(e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+                    SaveVideoFile(e.OutputFile, e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+                }
+                else
+                {
+                    SaveHLSBatch(e.OutputFile,OutputFormat.Hd480, e.ParentVideoFileId).GetAwaiter();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+
         }
     }
 }

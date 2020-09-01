@@ -1,4 +1,5 @@
-﻿using VideoApp.Web.Models.Entities;
+﻿using System.Collections.Generic;
+using VideoApp.Web.Models.Entities;
 
 namespace VideoApp.Web.Models.ViewModels
 {
@@ -12,6 +13,8 @@ namespace VideoApp.Web.Models.ViewModels
         public string CodecName { get; set; }
         public string Resolution { get; set; }
         public string Status { get; set; }
-        public int? ParentVideoFileId { get; set; }
+        public List<VideoFileModel> AvailableResolutions { get; set; }
+        public List<ThumbnailModel> Thumbnails { get; set; }
+        //public List<HLSFile> HLSFiles { get; set; }
     }
 }

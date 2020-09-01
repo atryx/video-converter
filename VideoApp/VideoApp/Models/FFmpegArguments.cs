@@ -6,5 +6,12 @@
         public string OutputFile { get; set; }
         public OutputFormat OutputFormat { get; set; }
         public int ParentVideoId { get; set; }
+        public OperationType Operation { get; set; }
+    }
+
+    public enum OperationType
+    {
+        Conversion,
+        HLS
     }
 }
