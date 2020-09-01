@@ -122,7 +122,11 @@ namespace VideoApp.Web.Services
 
         public async Task<List<VideoFileModel>> GetAvailableVideos()
         {
-            var dbList = await _dbContext.Videos.ToListAsync();
+            var dbList = await _dbContext.Videos.Where(v => v.ParentVideoFileId == null)
+                .Include("DifferentResolutionsFile")
+                .Include("Thumbnails")
+                .ToListAsync();
+
             return _mapper.Map<List<VideoFileModel>>(dbList);
         }
 

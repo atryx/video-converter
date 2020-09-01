@@ -21,6 +21,7 @@ namespace VideoApp.Web.Models.Entities
         public Status Status { get; set; } = Status.FileUploaded;
         public int? ParentVideoFileId { get; set; }
         public virtual VideoFile ParentVideoFile { get; set; }
-        public virtual List<VideoFile> DifferentResolutionsFile { get; set; } 
+        public virtual List<VideoFile> DifferentResolutionsFile { get; set; }
+        public virtual List<Thumbnail> Thumbnails{ get; set; }
     }
 }
