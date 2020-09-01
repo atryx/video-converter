@@ -22,17 +22,17 @@ namespace VideoApp.Web.Services
     {
         private readonly IJobRunnerQueue _jobRunner;
         private readonly IFFmpegWraperService _ffmpeg;
-        private IHostEnvironment _hostingEnvironment;
+        private readonly IFileManagerService _fileManagerService;
         private readonly VideoInformationContext _dbContext;
         private readonly IMapper _mapper;
 
-        public VideoConverterService(IHostEnvironment environment,
+        public VideoConverterService(IFileManagerService fileManagerService,
             VideoInformationContext context,
             IMapper mapper,
             IJobRunnerQueue jobRunner,
             IFFmpegWraperService ffmpeg)
         {
-            _hostingEnvironment = environment;
+            _fileManagerService = fileManagerService;
             _dbContext = context;
             _mapper = mapper;
             _jobRunner = jobRunner;
@@ -43,8 +43,7 @@ namespace VideoApp.Web.Services
         {
             string convertCommandArguments = string.Empty;
             string uniqueFileName = Guid.NewGuid() + "_" + fileUpload.UploadedFile.FileName;
-            // TODO move this in another services, should return a bool if save is succesfull
-            string fullFilePath = await SaveTempFile(fileUpload.UploadedFile, uniqueFileName);
+            string fullFilePath = await _fileManagerService.SaveTempFile(fileUpload.UploadedFile, uniqueFileName);
             string outputFile = $"{uniqueFileName.Substring(0, uniqueFileName.LastIndexOf('.'))}_" +
                 $"{fileUpload.OutputFormat}." +
                 $"{uniqueFileName.Substring(uniqueFileName.LastIndexOf('.'))}";
@@ -100,25 +99,7 @@ namespace VideoApp.Web.Services
             _dbContext.Videos.Add(videoFile);
             await _dbContext.SaveChangesAsync();
             return videoFile;
-        }
-
-        private async Task<string> SaveTempFile(IFormFile file, string fileName)
-        {
-            var uploads = Path.Combine(_hostingEnvironment.ContentRootPath, "Uploads");
-            if (file.Length > 0)
-            {
-                var filePath = Path.Combine(uploads, fileName);
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(fileStream);
-                }
-                return filePath;
-            }
-            else
-            {
-                throw new Exception("file must not be empty");
-            }
-        }
+        }       
 
         public async Task<List<VideoFileModel>> GetAvailableVideos()
         {
@@ -134,40 +115,18 @@ namespace VideoApp.Web.Services
         {
             var videoFile = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == videoId);
             return videoFile;
-        }
-
-        private async Task<bool> DeleteTempFile(string fullPath)
-        {
-            try
-            {
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                    return await Task.FromResult(true);
-                }
-                return await Task.FromResult(false);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error deleteing TEMP file: " + ex.Message);
-            }
-        }
+        }     
 
         public async Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO)
         {
             var videoFile = await GetVideo(thumbnailDTO.VideoId);
       
-            var result = await _ffmpeg.GetVideoThumbails(videoFile.Filename, thumbnailDTO.TimestampOfScreenshots);
-            //_jobRunner.Enqueue(new FFmpegArguments()
-            //{
-            //    ParentVideoId = videoFile.Id,
-            //    InputFile = videoFile.Filename,
-            //    OutputFile = "something",
-            //    OutputFormat = OutputFormat.Hd720
-            //});
-            //_jobRunner.JobFinished += c_JobFinished;
+            var addedThumbnails = await _ffmpeg.GetVideoThumbails(videoFile.Filename, thumbnailDTO.TimestampOfScreenshots);
+            addedThumbnails.ForEach(t => t.ParentVideoFileId = videoFile.Id);
+            _dbContext.Thumbnails.AddRange(addedThumbnails);
+            await _dbContext.SaveChangesAsync();
+            return _mapper.Map<List<ThumbnailModel>>(addedThumbnails);
 
-            return result;
         }
     }
 }

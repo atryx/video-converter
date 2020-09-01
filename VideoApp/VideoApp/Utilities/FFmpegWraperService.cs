@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using VideoApp.Web.Models;
-using VideoApp.Web.Models.ViewModels;
+using VideoApp.Web.Models.Entities;
 using Xabe.FFmpeg;
 
 namespace VideoApp.Web.Utilities
@@ -49,13 +49,13 @@ namespace VideoApp.Web.Utilities
                 .Start();
         }
 
-        public async Task<List<ThumbnailModel>> GetVideoThumbails(string inputFile, List<int> wantedSeconds)
+        public async Task<List<Thumbnail>> GetVideoThumbails(string inputFile, List<int> wantedSeconds)
         {
             string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
-            var thumbnails = new List<ThumbnailModel>();
+            var thumbnails = new List<Thumbnail>();
             foreach (var second in wantedSeconds)
             {
-                var thumbnail = new ThumbnailModel();
+                var thumbnail = new Thumbnail();
                 thumbnail.Name = $"{inputFile.Substring(0, inputFile.LastIndexOf('.'))}_{second}.png";
                 thumbnail.Timestamp = TimeSpan.FromSeconds(second);
                 thumbnail.Format = "png";
