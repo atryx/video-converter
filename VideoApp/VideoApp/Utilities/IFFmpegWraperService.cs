@@ -10,7 +10,7 @@ namespace VideoApp.Web.Utilities
     {
         Task ConvertToOtherFormat(string inputPath, string outputPath, OutputFormat format);
         Task<List<Thumbnail>> GetVideoThumbails(string inputPath, List<int> wantedSeconds);
-        Task GenerateHLS(string inputPath, string outputPath);
+        Task GenerateHLS(string inputPath);
         Task<IMediaInfo> GetMediaInfo(string inputPath);
     }
 }

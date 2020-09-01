@@ -47,5 +47,12 @@ namespace VideoApp.Controllers
             var result = await _videoConverterService.GetThumbnails(thumbnailDTO);
             return Ok(result);
         }
+
+        [HttpPost("hls")]
+        public async Task<ActionResult<List<ThumbnailModel>>> GenerateHLS([FromBody]HLSDTO hlsDTO)
+        {
+            await _videoConverterService.GenerateHLS(hlsDTO);
+            return Ok("");
+        }
     }
 }

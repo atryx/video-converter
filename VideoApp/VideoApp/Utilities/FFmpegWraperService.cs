@@ -69,20 +69,31 @@ namespace VideoApp.Web.Utilities
             
         }
 
-        public async Task GenerateHLS(string inputPath, string outputPath)
+        public async Task GenerateHLS(string inputPath, OutputFormat format)
         {
-            string output = Path.Combine(_basePath, "uploads", Guid.NewGuid() + outputPath + ".png");
+            var videoSize = _mapper.Map<VideoSize>(format);
+            string inputFile = Path.Combine(_basePath, "Uploads", inputPath);
+            string hlsDirectory = inputFile.Substring(0, inputFile.LastIndexOf('.'));
+            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(inputFile);
+            IStream videoStream480p = mediaInfo.VideoStreams.FirstOrDefault()
+                 ?.SetCodec(VideoCodec.h264)
+                 ?.SetSize(videoSize);
+            IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault()
+                ?.SetCodec(AudioCodec.aac)
+                ?.SetBitrate(128000)
+                ?.SetSampleRate(48000);
 
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
-            IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault();
-            IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault();
-
-            IConversionResult result3 = await FFmpeg.Conversions.New()
-                    .AddStream(videoStream)
-                    .AddParameter("-frames:v 1")
-                    .AddParameter("-s 1920x1080")
-                    .AddParameter("-an")
-                    .SetOutput(output)
+            IConversionResult result480p = await FFmpeg.Conversions.New()
+                    .AddStream(videoStream480p, audioStream)
+                    .AddParameter("-profile:v main")
+                    .AddParameter("-crf 20")
+                    .AddParameter("-g 48 -keyint_min 48")
+                    .AddParameter("-sc_threshold 0")
+                    .AddParameter("-b:v 2800k - maxrate 2996k - bufsize 4200k ")
+                    .AddParameter("-hls_time 4")
+                    .AddParameter("-hls_playlist_type vod")
+                    .AddParameter($"-hls_segment_filename {hlsDirectory}/{videoSize}_%03d.ts")
+                    .AddParameter($"{hlsDirectory}\\{videoSize}.m3u8")
                     .Start();
 
             // ffmpeg -hide_banner -y -i beach.mkv \

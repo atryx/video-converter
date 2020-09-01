@@ -128,5 +128,12 @@ namespace VideoApp.Web.Services
             return _mapper.Map<List<ThumbnailModel>>(addedThumbnails);
 
         }
+
+        public async Task GenerateHLS(HLSDTO hlsDTO)
+        {
+            var videoFile = await GetVideo(hlsDTO.VideoId);
+
+            await _ffmpeg.GenerateHLS(videoFile.Filename, OutputFormat format);
+        }
     }
 }
