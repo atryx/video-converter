@@ -1,0 +1,43 @@
+<!-- <h2>{{ video.filename | uppercase }} Details</h2>
+<div><span>id: </span>{{ video.id }}</div>
+<div><span>duration: </span>{{ video.duration }}</div>
+<div><span>bitrate: </span>{{ video.bitRate }}</div>
+<div><span>codec: </span>{{ video.codecName }}</div>
+<div><span>resolution: </span>{{ video.resolution }}</div>
+<div><span>status: </span>{{ video.status }}</div>
+<div>
+  <span>availableResolutions: </span>
+  <ol>
+    <li *ngFor="let res of video.availableResolutions">
+      {{ res }}
+    </li>
+  </ol>
+</div>
+<div>
+  <span>availableThumbnails: </span>
+  <ul>
+    <li *ngFor="let thumbnail of video.thumbnails">
+      {{ thumbnail }}
+    </li>
+  </ul>
+</div> -->
+
+<div *ngIf="selectedVideo">
+  <h2>{{ selectedVideo.filename | uppercase }} Details</h2>
+  <div><span>id: </span>{{ selectedVideo.id }}</div>
+  <div>
+    <label
+      >name:
+      <input [(ngModel)]="selectedVideo.duration" placeholder="duration" />
+    </label>
+  </div>
+</div>
+<div>
+  <li
+    *ngFor="let video of videos"
+    [class.selected]="video === selectedVideo"
+    (click)="onSelect(video)"
+  >
+    <span class="badge">{{ video.id }}</span> {{ video.filename }}
+  </li>
+</div>
