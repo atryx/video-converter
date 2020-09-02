@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { Video } from '../models/video';
 import { VIDEOS } from '../mock-videos';
 
@@ -8,25 +10,28 @@ import { VIDEOS } from '../mock-videos';
   styleUrls: ['./videos.component.css'],
 })
 export class VideosComponent implements OnInit {
-  video: Video = {
-    id: 1,
-    filename: 'fish_eats.mp4',
-    duration: '00:10:00',
-    bitRate: '48k',
-    codecName: 'h264',
-    resolution: '4k',
-    status: 'FileUploaded',
-    availableResolutions: ['Hd720', 'Hd480'],
-    thumbnails: ['1', '2'],
-  };
-  videos = VIDEOS;
+  displayedColumns: string[] = [
+    'actions',
+    'name',
+    'duration',
+    'bitrate',
+    'codec',
+    'resolution',
+    'availableResolutions',
+    'thumbnails',
+    'delete',
+  ];
+  dataSource = new MatTableDataSource<Video>(VIDEOS);
 
-  selectedVideo: Video;
-  onSelect(video: Video): void {
-    this.selectedVideo = video;
-  }
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
 
   constructor() {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.dataSource.paginator = this.paginator;
+  }
+
+  onSelect(video: Video): void {
+    console.log(video);
+  }
 }

@@ -1,43 +1,82 @@
-<!-- <h2>{{ video.filename | uppercase }} Details</h2>
-<div><span>id: </span>{{ video.id }}</div>
-<div><span>duration: </span>{{ video.duration }}</div>
-<div><span>bitrate: </span>{{ video.bitRate }}</div>
-<div><span>codec: </span>{{ video.codecName }}</div>
-<div><span>resolution: </span>{{ video.resolution }}</div>
-<div><span>status: </span>{{ video.status }}</div>
-<div>
-  <span>availableResolutions: </span>
-  <ol>
-    <li *ngFor="let res of video.availableResolutions">
-      {{ res }}
-    </li>
-  </ol>
-</div>
-<div>
-  <span>availableThumbnails: </span>
-  <ul>
-    <li *ngFor="let thumbnail of video.thumbnails">
-      {{ thumbnail }}
-    </li>
-  </ul>
-</div> -->
+<button mat-raised-button color="primary">Add new video</button>
 
-<div *ngIf="selectedVideo">
-  <h2>{{ selectedVideo.filename | uppercase }} Details</h2>
-  <div><span>id: </span>{{ selectedVideo.id }}</div>
-  <div>
-    <label
-      >name:
-      <input [(ngModel)]="selectedVideo.duration" placeholder="duration" />
-    </label>
-  </div>
-</div>
-<div>
-  <li
-    *ngFor="let video of videos"
-    [class.selected]="video === selectedVideo"
-    (click)="onSelect(video)"
-  >
-    <span class="badge">{{ video.id }}</span> {{ video.filename }}
-  </li>
+<div class="mat-elevation-z8">
+  <table mat-table [dataSource]="dataSource">
+    <!-- Id Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <mat-cell *matCellDef="let video">
+        <!-- <td mat-cell *matCellDef="let video">{{ video.id }}</td> -->
+        <button mat-flat-button color="primary">Edit</button>
+      </mat-cell>
+    </ng-container>
+
+    <!-- Name Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let video">{{ video.filename }}</td>
+    </ng-container>
+
+    <!-- Duration Column -->
+    <ng-container matColumnDef="duration">
+      <th mat-header-cell *matHeaderCellDef>Duration</th>
+      <td mat-cell *matCellDef="let video">{{ video.duration }}</td>
+    </ng-container>
+
+    <!-- Bitrate Column -->
+    <ng-container matColumnDef="bitrate">
+      <th mat-header-cell *matHeaderCellDef>Bitrate</th>
+      <td mat-cell *matCellDef="let video">{{ video.bitRate }}</td>
+    </ng-container>
+
+    <!-- Codec Column -->
+    <ng-container matColumnDef="codec">
+      <th mat-header-cell *matHeaderCellDef>CodecName</th>
+      <td mat-cell *matCellDef="let video">{{ video.codecName }}</td>
+    </ng-container>
+
+    <!-- Resolution Column -->
+    <ng-container matColumnDef="resolution">
+      <th mat-header-cell *matHeaderCellDef>Resolution</th>
+      <td mat-cell *matCellDef="let video">{{ video.resolution }}</td>
+    </ng-container>
+
+    <!-- Other Resolution Column -->
+    <ng-container matColumnDef="availableResolutions">
+      <th mat-header-cell *matHeaderCellDef>Other Resolutions</th>
+      <td mat-cell *matCellDef="let video">
+        {{ video.availableResolutions.join(", ") }}
+      </td>
+    </ng-container>
+
+    <!-- Thumbnails Column -->
+    <ng-container matColumnDef="thumbnails">
+      <th mat-header-cell *matHeaderCellDef>Thumbnails</th>
+      <td mat-cell *matCellDef="let video">
+        {{ video.thumbnails.join(", ") }}
+      </td>
+    </ng-container>
+
+    <!-- Delete Column -->
+    <ng-container matColumnDef="delete">
+      <th mat-header-cell *matHeaderCellDef>Delete</th>
+      <mat-cell *matCellDef="let video">
+        <button
+          mat-mini-fab
+          color="primary"
+          aria-label="Example icon button with a delete icon"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  <mat-paginator
+    [pageSizeOptions]="[5, 10, 20]"
+    showFirstLastButtons
+  ></mat-paginator>
 </div>
