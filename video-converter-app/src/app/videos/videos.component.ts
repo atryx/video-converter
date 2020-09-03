@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { VideoService } from '../video.service';
 import { Video } from '../models/video';
-import { VIDEOS } from '../mock-videos';
 
 @Component({
   selector: 'app-videos',
@@ -10,6 +11,7 @@ import { VIDEOS } from '../mock-videos';
   styleUrls: ['./videos.component.css'],
 })
 export class VideosComponent implements OnInit {
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   displayedColumns: string[] = [
     'actions',
     'name',
@@ -21,17 +23,54 @@ export class VideosComponent implements OnInit {
     'thumbnails',
     'delete',
   ];
-  dataSource = new MatTableDataSource<Video>(VIDEOS);
+  dataSource = new MatTableDataSource<Video>();
+  isLoading = true;
 
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-
-  constructor() {}
+  constructor(public dialog: MatDialog, private videoService: VideoService) {}
 
   ngOnInit(): void {
     this.dataSource.paginator = this.paginator;
+    this.getVideos();
   }
 
-  onSelect(video: Video): void {
-    console.log(video);
+  getVideos(): void {
+    this.videoService.getVideos().subscribe(
+      (videos) => {
+        this.isLoading = false;
+        this.dataSource.data = videos;
+      },
+      (error) => {
+        console.log(error);
+        this.isLoading = false;
+      }
+    );
+  }
+
+  onSelect(id: number): void {
+    console.log('on select clicked', id);
+  }
+
+  openDialog(id: number) {
+    const dialogRef = this.dialog.open(DialogContentExampleDialog);
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.event) console.log('delete video');
+      else console.log('do nothing');
+    });
+  }
+}
+
+@Component({
+  selector: 'dialog-content-example-dialog',
+  templateUrl: 'dialog-content-example-dialog.html',
+})
+export class DialogContentExampleDialog {
+  constructor(public dialogRef: MatDialogRef<DialogContentExampleDialog>) {}
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
+  onConfirmClick(): void {
+    this.dialogRef.close({ event: true });
   }
 }

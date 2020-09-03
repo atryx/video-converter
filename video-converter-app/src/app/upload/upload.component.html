@@ -1,0 +1,32 @@
+<form>
+  <div mat-card-actions>
+    <button mat-raised-button color="primary" (click)="onClick()">
+      <mat-icon>file_upload</mat-icon>
+      Upload
+    </button>
+    <input
+      type="file"
+      #fileInput
+      name="fileUpload"
+      accept="video/*"
+      [hidden]="true"
+    />
+  </div>
+  <br />
+  <div>
+    <mat-form-field appearance="fill">
+      <mat-label>Select output resolution</mat-label>
+      <mat-select [(ngModel)]="selectedValue" name="food">
+        <mat-option *ngFor="let format of formats" [value]="format.value">
+          {{ format.viewValue }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div mat-card-actions>
+    <button mat-raised-button [routerLink]="['/videos']">Back</button>
+    <button mat-raised-button color="primary" (click)="callVideoService()">
+      Convert to selected format
+    </button>
+  </div>
+</form>
