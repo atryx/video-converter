@@ -1,8 +1,5 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using VideoApp.FFmpegUtilities.Models;
 using VideoApp.Web.Models;
 using VideoApp.Web.Models.Entities;
 using VideoApp.Web.Models.ViewModels;

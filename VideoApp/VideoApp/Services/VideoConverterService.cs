@@ -98,11 +98,18 @@ namespace VideoApp.Web.Services
             return _mapper.Map<List<VideoFileModel>>(dbList);
         }
 
-        public async Task<VideoFile> GetVideo(int videoId)
+        private async Task<VideoFile> GetVideo(int videoId)
         {
             var videoFile = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == videoId);
             return videoFile;
-        }     
+        }
+
+        public async Task<VideoFileModel> GetVideoModel(int id)
+        {
+            var videoFile = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == id);
+            var result = _mapper.Map<VideoFileModel>(videoFile);
+            return result;
+        }
 
         public async Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO)
         {

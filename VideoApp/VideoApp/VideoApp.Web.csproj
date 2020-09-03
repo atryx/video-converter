@@ -6,10 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FFmpegUtilities\VideoApp.FFmpegUtilities.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="ffmpeg\" />
     <Folder Include="Uploads\" />
   </ItemGroup>

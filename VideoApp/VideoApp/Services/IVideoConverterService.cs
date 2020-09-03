@@ -15,5 +15,7 @@ namespace VideoApp.Web.Services
         Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO);
 
         Task GenerateHLS(HLSDTO hlsDTO);
+
+        Task<VideoFileModel> GetVideoModel(int id);
     }
 }

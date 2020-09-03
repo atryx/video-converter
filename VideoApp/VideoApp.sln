@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoApp.Web", "VideoApp\VideoApp.Web.csproj", "{0AF59FB1-48A5-41E4-8007-8140C429332B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{F3156578-8845-4C1A-BE6E-F46E20D93EA3} = {F3156578-8845-4C1A-BE6E-F46E20D93EA3}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoApp.FFmpegUtilities", "FFmpegUtilities\VideoApp.FFmpegUtilities.csproj", "{F3156578-8845-4C1A-BE6E-F46E20D93EA3}"
 EndProject

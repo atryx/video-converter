@@ -41,6 +41,13 @@ namespace VideoApp.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{videoId}")]
+        public async Task<ActionResult<List<VideoFileModel>>> GetVideo(int videoId)
+        {
+            var result = await _videoConverterService.GetVideoModel(videoId);
+            return Ok("true");
+        }
+
         [HttpPost("thumbnails")]
         public async Task<ActionResult<List<ThumbnailModel>>> GetThumbnails([FromBody]ThumbnailDTO thumbnailDTO)
         {
