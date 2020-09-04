@@ -5,7 +5,6 @@ export interface Video {
   bitRate: string;
   codecName: string;
   resolution: string;
-  size: string;
   status: string;
   availableResolutions: string[];
   thumbnails: string[];

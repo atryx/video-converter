@@ -12,14 +12,10 @@ namespace VideoApp.Web.Services
 
         Task<List<VideoFileModel>> GetAvailableVideos();
 
-        Task<VideoFileModel> GenerateThumbnails(ThumbnailDTO thumbnailDTO);
+        Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO);
 
-        Task<VideoFileModel> GenerateHLS(ConvertVideoDTO hlsDTO);
-
-        Task<VideoFileModel> ConvertFromExistingVideo(ConvertVideoDTO video);
+        Task GenerateHLS(HLSDTO hlsDTO);
 
         Task<VideoFileModel> GetVideoModel(int id);
-
-        Task<OutputFileModel> DownloadFile(string filename);
     }
 }

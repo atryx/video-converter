@@ -1,5 +1,4 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { Router } from '@angular/router';
 import { OutputFormat } from '../models/outputFormat';
 import { VideoService } from '../video.service';
 
@@ -19,14 +18,14 @@ export class UploadComponent implements OnInit {
     { value: 'Hd1080', viewValue: 'HD 1080p' },
   ];
 
-  constructor(private videoService: VideoService, private router: Router) {}
+  constructor(private videoService: VideoService) {}
 
   ngOnInit(): void {}
 
   onClick() {
     const fileInput = this.fileInput.nativeElement;
     fileInput.onchange = () => {
-      this.file = fileInput.files[0];
+      this.file = fileInput.files;
     };
     fileInput.click();
   }
@@ -38,12 +37,12 @@ export class UploadComponent implements OnInit {
   callVideoService() {
     this.fileInput.nativeElement.value = '';
     const formData = new FormData();
-    formData.append('UploadedFile', this.file);
+    formData.append('file', this.file);
     formData.append('outputFormat', this.selectedValue);
 
     this.videoService.convertToFormat(formData).subscribe(
       (video) => {
-        this.router.navigate(['video', video.id]);
+        console.log(video);
       },
       (error) => {
         console.log(error);

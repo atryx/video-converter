@@ -10,7 +10,7 @@ using VideoApp.Web.Services;
 namespace VideoApp.Controllers
 {
     [ApiController]
-    [Route("api/videos")]
+    [Route("api/converter")]
     public class VideoConverterController : ControllerBase
     {
         private readonly IVideoConverterService _videoConverterService;
@@ -45,35 +45,21 @@ namespace VideoApp.Controllers
         public async Task<ActionResult<List<VideoFileModel>>> GetVideo(int videoId)
         {
             var result = await _videoConverterService.GetVideoModel(videoId);
-            return Ok(result);
+            return Ok("true");
         }
 
         [HttpPost("thumbnails")]
-        public async Task<ActionResult<VideoFileModel>> GenerateThumbnails([FromBody]ThumbnailDTO thumbnailDTO)
+        public async Task<ActionResult<List<ThumbnailModel>>> GetThumbnails([FromBody]ThumbnailDTO thumbnailDTO)
         {
-            var result = await _videoConverterService.GenerateThumbnails(thumbnailDTO);
+            var result = await _videoConverterService.GetThumbnails(thumbnailDTO);
             return Ok(result);
         }
 
         [HttpPost("hls")]
-        public async Task<ActionResult<VideoFileModel>> GenerateHLS([FromBody]ConvertVideoDTO hlsDTO)
+        public async Task<ActionResult<List<ThumbnailModel>>> GenerateHLS([FromBody]HLSDTO hlsDTO)
         {
-            var result = await _videoConverterService.GenerateHLS(hlsDTO);
-            return Ok(result);
-        }
-
-        [HttpPost("convert")]
-        public async Task<ActionResult<VideoFileModel>> ConvertFromExistingVideo([FromBody]ConvertVideoDTO hlsDTO)
-        {
-            var result = await _videoConverterService.ConvertFromExistingVideo(hlsDTO);
-            return Ok(result);
-        }
-
-        [HttpGet("download/{filename}")]
-        public async Task<ActionResult<OutputFileModel>> Download(string filename)
-        {
-            var file = await _videoConverterService.DownloadFile(filename);
-            return Ok(file);
+            await _videoConverterService.GenerateHLS(hlsDTO);
+            return Ok("");
         }
     }
 }

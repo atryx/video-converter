@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, of, interval, timer } from 'rxjs';
+import { flatMap, switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { Video } from './models/video';
-import { OutputFile } from './models/outputFile';
+import { VIDEOS } from './mock-videos';
 
 @Injectable({
   providedIn: 'root',
 })
 export class VideoService {
   // private videoURL = 'http://localhost:3000/videos';
-  private videoURL = 'http://localhost:5010/api/videos';
+  private videoURL = 'http://localhost:3000/videos';
 
   constructor(private http: HttpClient) {}
 
@@ -22,27 +22,11 @@ export class VideoService {
     );
   }
 
-  getVideoById(id): Observable<Video> {
-    return this.http.get<Video>(`${this.videoURL}/${id}`);
-  }
-
   convertToFormat(formData): Observable<Video> {
     return this.http.post<Video>(this.videoURL, formData);
   }
 
-  convertToFormatById(body): Observable<Video> {
-    return this.http.post<Video>(`${this.videoURL}/convert`, body);
-  }
-
-  generateHLS(hslData): Observable<Video> {
-    return this.http.post<Video>(`${this.videoURL}/hls`, hslData);
-  }
-
-  getThumbnails(thumbnailsData): Observable<Video> {
-    return this.http.post<Video>(`${this.videoURL}/thumbnails`, thumbnailsData);
-  }
-
-  downloadFile(filename): Observable<OutputFile> {
-    return this.http.get<OutputFile>(`${this.videoURL}/download/${filename}`);
+  getVideoById(id): Observable<Video> {
+    return this.http.get<Video>(`${this.videoURL}/${id}`);
   }
 }
