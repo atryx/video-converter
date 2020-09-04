@@ -15,6 +15,7 @@ namespace VideoApp
 {
     public class Startup
     {
+        readonly string AngularAppOrigin = "_myAllowSpecificOrigins";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -30,6 +31,15 @@ namespace VideoApp
             services.AddDbContext<VideoInformationContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("VideoConverterDatabase"))
                 , ServiceLifetime.Singleton);
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: AngularAppOrigin,
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("http://localhost:4200");
+                                  });
+            });
 
 
             services.AddScoped<IVideoConverterService, VideoConverterService>();
@@ -47,7 +57,7 @@ namespace VideoApp
             }
 
             app.UseRouting();
-
+            app.UseCors(AngularAppOrigin);
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
