@@ -48,15 +48,57 @@ export class VideoDetailComponent implements OnInit {
   }
 
   generateHLS() {
-    console.log('generate HLS');
+    this.isLoading = true;
+    this.videoService
+      .generateHLS({ videoId: this.video.id, outputFormat: this.selectedValue })
+      .subscribe(
+        (video) => {
+          this.video = video;
+          this.isLoading = false;
+          console.log(this.video);
+        },
+        (error) => {
+          this.isLoading = false;
+          console.log(error);
+        }
+      );
   }
 
   getThumbnails() {
-    console.log('getting thumbnails');
+    this.isLoading = true;
+    this.videoService
+      .getThumbnails({ videoId: this.video.id, timestampOfScreenshots: [1, 3] })
+      .subscribe(
+        (video) => {
+          this.video = video;
+          this.isLoading = false;
+          console.log(this.video);
+        },
+        (error) => {
+          this.isLoading = false;
+          console.log(error);
+        }
+      );
   }
 
   convertToOutput() {
-    console.log('gconvert to output');
+    this.isLoading = true;
+    this.videoService
+      .convertToFormatById({
+        videoId: this.video.id,
+        outputFormat: this.selectedValue,
+      })
+      .subscribe(
+        (video) => {
+          this.video = video;
+          this.isLoading = false;
+          console.log(this.video);
+        },
+        (error) => {
+          this.isLoading = false;
+          console.log(error);
+        }
+      );
   }
 
   download(filename) {
@@ -71,7 +113,10 @@ export class VideoDetailComponent implements OnInit {
       // const url = window.URL.createObjectURL(blob);
       fileSaver.saveAs(blob, response.fileName);
     }),
-      (error) => console.log('Error downloading the file'),
+      (error) => {
+        this.isLoading = false;
+        console.log('Error downloading the file');
+      },
       () => console.info('File downloaded successfully');
   }
 }

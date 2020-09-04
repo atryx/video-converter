@@ -1,3 +1,5 @@
+import { Thumbnail } from './thumbnail';
+
 export interface Video {
   id: number;
   filename: string;
@@ -7,6 +9,6 @@ export interface Video {
   resolution: string;
   size: string;
   status: string;
-  availableResolutions: string[];
-  thumbnails: string[];
+  availableResolutions: Video[];
+  thumbnails: Thumbnail[];
 }

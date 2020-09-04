@@ -23,6 +23,30 @@
     <span> {{ video.codecName }} </span>
   </div>
   <div>
+    <mat-label>Status: </mat-label>
+    <span> {{ video.status }} </span>
+  </div>
+  <div>
+    <mat-label>Thumbnails: </mat-label>
+    <ul>
+      <li *ngFor="let thumb of video.thumbnails">
+        <button mat-raised-button color="link" (click)="download(thumb.name)">
+          {{ thumb.name }}
+        </button>
+      </li>
+    </ul>
+  </div>
+  <div>
+    <mat-label>Available resolutions: </mat-label>
+    <ul>
+      <li *ngFor="let res of video.availableResolutions">
+        <button mat-raised-button color="link" (click)="download(res.filename)">
+          {{ res.filename }}
+        </button>
+      </li>
+    </ul>
+  </div>
+  <div>
     <mat-form-field appearance="fill">
       <mat-label>Select output resolution</mat-label>
       <mat-select [(ngModel)]="selectedValue" name="food">
