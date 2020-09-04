@@ -101,17 +101,21 @@ export class VideoDetailComponent implements OnInit {
       );
   }
 
-  download(filename) {
+  download(fileLocation, fileName) {
     this.isLoading = true;
-    console.log('download clicked', filename);
-    this.videoService.downloadFile(filename).subscribe((response) => {
+    console.log('download clicked', fileLocation);
+    this.videoService.downloadFile(fileLocation).subscribe((response) => {
       console.log(response);
       this.isLoading = false;
-      let blob: any = new Blob([response.fileContents], {
-        type: response.contentType,
+
+      let fileExtension = fileName.split('.').pop();
+      let contentType =
+        fileExtension == 'png' ? 'image/png' : `video/${fileExtension}`;
+      let blob: any = new Blob([response], {
+        type: contentType,
       });
       // const url = window.URL.createObjectURL(blob);
-      fileSaver.saveAs(blob, response.fileName);
+      fileSaver.saveAs(blob, fileName);
     }),
       (error) => {
         this.isLoading = false;

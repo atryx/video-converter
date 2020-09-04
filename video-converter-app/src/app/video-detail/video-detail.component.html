@@ -2,7 +2,11 @@
 <form *ngIf="!isLoading">
   <div>
     <mat-label>Filename: </mat-label>
-    <button mat-raised-button color="link" (click)="download(video.filename)">
+    <button
+      mat-raised-button
+      color="link"
+      (click)="download(video.filename, video.filename)"
+    >
       {{ video.filename }}
     </button>
   </div>
@@ -30,7 +34,11 @@
     <mat-label>Thumbnails: </mat-label>
     <ul>
       <li *ngFor="let thumb of video.thumbnails">
-        <button mat-raised-button color="link" (click)="download(thumb.name)">
+        <button
+          mat-raised-button
+          color="link"
+          (click)="download(thumb.fileLocation, thumb.name)"
+        >
           {{ thumb.name }}
         </button>
       </li>
@@ -40,7 +48,11 @@
     <mat-label>Available resolutions: </mat-label>
     <ul>
       <li *ngFor="let res of video.availableResolutions">
-        <button mat-raised-button color="link" (click)="download(res.filename)">
+        <button
+          mat-raised-button
+          color="link"
+          (click)="download(res.filename, res.filename)"
+        >
           {{ res.filename }}
         </button>
       </li>

@@ -42,7 +42,10 @@ export class VideoService {
     return this.http.post<Video>(`${this.videoURL}/thumbnails`, thumbnailsData);
   }
 
-  downloadFile(filename): Observable<OutputFile> {
-    return this.http.get<OutputFile>(`${this.videoURL}/download/${filename}`);
+  downloadFile(filename): Observable<any> {
+    return this.http.get(
+      `${this.videoURL}/download/${encodeURIComponent(filename)}`,
+      { responseType: 'blob' }
+    );
   }
 }
