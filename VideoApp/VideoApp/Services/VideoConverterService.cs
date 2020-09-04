@@ -111,7 +111,7 @@ namespace VideoApp.Web.Services
             return result;
         }
 
-        public async Task<List<ThumbnailModel>> GetThumbnails(ThumbnailDTO thumbnailDTO)
+        public async Task<VideoFileModel> GenerateThumbnails(ThumbnailDTO thumbnailDTO)
         {
             var videoFile = await GetVideo(thumbnailDTO.VideoId);
       
@@ -119,11 +119,11 @@ namespace VideoApp.Web.Services
             addedThumbnails.ForEach(t => t.ParentVideoFileId = videoFile.Id);
             _dbContext.Thumbnails.AddRange(addedThumbnails);
             await _dbContext.SaveChangesAsync();
-            return _mapper.Map<List<ThumbnailModel>>(addedThumbnails);
+            return _mapper.Map<VideoFileModel>(videoFile);
 
         }
 
-        public async Task GenerateHLS(HLSDTO hlsDTO)
+        public async Task<VideoFileModel> GenerateHLS(ConvertVideoDTO hlsDTO)
         {
             var videoFile = await GetVideo(hlsDTO.VideoId);
 
@@ -134,7 +134,9 @@ namespace VideoApp.Web.Services
                 OutputFormat = hlsDTO.OutputFormat,
                 Operation = OperationType.HLS
             });
-            _jobRunner.JobFinished += c_JobFinished;            
+            _jobRunner.JobFinished += c_JobFinished;
+
+            return _mapper.Map<VideoFileModel>(videoFile);
         }
 
         public async Task<List<HLSFile>> SaveHLSBatch(string path, OutputFormat format, int parentVideoId)
@@ -178,6 +180,32 @@ namespace VideoApp.Web.Services
                 throw new Exception(ex.Message);
             }
 
+        }
+
+        public async Task<OutputFileModel> DownloadFile(string filename)
+        {
+            var result = await _fileManagerService.GetFile(filename);
+            return result;
+        }
+
+        public async Task<VideoFileModel> ConvertFromExistingVideo(ConvertVideoDTO video)
+        {
+            var videoFile = await GetVideo(video.VideoId);
+            string outputFile = $"{videoFile.Filename.Substring(0, videoFile.Filename.LastIndexOf('.'))}_" +
+                $"{video.OutputFormat}." +
+                $"{videoFile.Filename.Substring(videoFile.Filename.LastIndexOf('.'))}";
+
+            _jobRunner.Enqueue(new FFmpegArguments()
+            {
+                OutputFile = outputFile,
+                ParentVideoId = videoFile.Id,
+                InputFile = videoFile.Filename,
+                OutputFormat = video.OutputFormat,
+                Operation = OperationType.Conversion
+            });
+            _jobRunner.JobFinished += c_JobFinished;
+
+            return _mapper.Map<VideoFileModel>(videoFile);
         }
     }
 }

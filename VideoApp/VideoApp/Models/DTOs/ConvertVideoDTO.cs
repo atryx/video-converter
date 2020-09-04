@@ -3,7 +3,7 @@ using Newtonsoft.Json.Converters;
 
 namespace VideoApp.Web.Models.DTOs
 {
-    public class HLSDTO
+    public class ConvertVideoDTO
     {
         public int VideoId { get; set; }
 
