@@ -1,1 +1,60 @@
 <p>video-detail works!</p>
+<form *ngIf="!isLoading">
+  <div>
+    <mat-label>Filename: </mat-label>
+    <button mat-raised-button color="link" (click)="download(video.filename)">
+      {{ video.filename }}
+    </button>
+  </div>
+  <div>
+    <mat-label>Duration: </mat-label>
+    <span> {{ video.duration }} </span>
+  </div>
+  <div>
+    <mat-label>Resolution: </mat-label>
+    <span> {{ video.resolution }} </span>
+  </div>
+  <div>
+    <mat-label>Size: </mat-label>
+    <span> {{ video.size }} </span>
+  </div>
+  <div>
+    <mat-label>Codec: </mat-label>
+    <span> {{ video.codecName }} </span>
+  </div>
+  <div>
+    <mat-form-field appearance="fill">
+      <mat-label>Select output resolution</mat-label>
+      <mat-select [(ngModel)]="selectedValue" name="food">
+        <mat-option *ngFor="let format of formats" [value]="format.value">
+          {{ format.viewValue }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div mat-card-actions>
+    <button mat-raised-button [routerLink]="['/videos']">Back</button>
+    <button mat-raised-button color="primary" (click)="convertToOutput()">
+      Convert to output
+    </button>
+    <button mat-raised-button color="primary" (click)="generateHLS()">
+      Generate HLS
+    </button>
+    <button mat-raised-button color="primary" (click)="getThumbnails()">
+      Get Thumbnails
+    </button>
+  </div>
+</form>
+
+<div
+  *ngIf="isLoading"
+  style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+  "
+>
+  <mat-spinner></mat-spinner>
+</div>
