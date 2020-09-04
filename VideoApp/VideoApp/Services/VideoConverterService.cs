@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -182,10 +183,17 @@ namespace VideoApp.Web.Services
 
         }
 
-        public async Task<OutputFileModel> DownloadFile(string filename)
+        public async Task<FileStream> DownloadFile(string fileName)
         {
-            var result = await _fileManagerService.GetFile(filename);
-            return result;
+            try
+            {
+                var result = await _fileManagerService.GetFile(fileName);
+                return result;
+            }
+            catch(Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public async Task<VideoFileModel> ConvertFromExistingVideo(ConvertVideoDTO video)

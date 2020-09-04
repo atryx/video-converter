@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using VideoApp.Web.Models;
 using VideoApp.Web.Models.DTOs;
@@ -20,6 +21,6 @@ namespace VideoApp.Web.Services
 
         Task<VideoFileModel> GetVideoModel(int id);
 
-        Task<OutputFileModel> DownloadFile(string filename);
+        Task<FileStream> DownloadFile(string fileName);
     }
 }

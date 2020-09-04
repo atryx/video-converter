@@ -52,6 +52,7 @@ namespace VideoApp.Web.Utilities
         public async Task<List<Thumbnail>> GetVideoThumbails(string inputFile, List<int> wantedSeconds)
         {
             string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
+            string basePath = Path.Combine(_basePath, "Uploads");
             string fileDirectory = inputPath.Substring(0, inputPath.LastIndexOf('.'));
             if (!Directory.Exists(fileDirectory))
             {
@@ -61,12 +62,13 @@ namespace VideoApp.Web.Utilities
             foreach (var second in wantedSeconds)
             {
                 var thumbnail = new Thumbnail();
-                thumbnail.Name = $"{inputFile.Substring(0, inputFile.LastIndexOf('.'))}_{second}.png";
+                thumbnail.Name = $"Thumnbail_{second}.png";
+                thumbnail.FileLocation = $"{inputFile.Substring(0, inputFile.LastIndexOf('.'))}\\{thumbnail.Name}";
                 thumbnail.Timestamp = TimeSpan.FromSeconds(second);
                 thumbnail.Format = "png";
                 thumbnails.Add(thumbnail);
                 IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath, 
-                    $"{fileDirectory}\\{thumbnail.Name}", 
+                    $"{basePath}\\{thumbnail.FileLocation}", 
                     TimeSpan.FromSeconds(second));
                 IConversionResult result = await conversion.Start();
 

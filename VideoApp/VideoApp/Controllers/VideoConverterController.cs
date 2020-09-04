@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -70,7 +71,7 @@ namespace VideoApp.Controllers
         }
 
         [HttpGet("download/{filename}")]
-        public async Task<ActionResult<OutputFileModel>> Download(string filename)
+        public async Task<ActionResult<FileStream>> Download(string filename)
         {
             var file = await _videoConverterService.DownloadFile(filename);
             return Ok(file);

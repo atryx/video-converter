@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using VideoApp.Web.Models.Entities;
 
 namespace VideoApp.Web.Models.ViewModels
 {
