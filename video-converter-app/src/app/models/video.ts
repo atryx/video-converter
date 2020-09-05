@@ -1,4 +1,5 @@
 import { Thumbnail } from './thumbnail';
+import { HLSFile } from './hlsFile';
 
 export interface Video {
   id: number;
@@ -12,4 +13,5 @@ export interface Video {
   status: string;
   availableResolutions: Video[];
   thumbnails: Thumbnail[];
+  hlsFiles: HLSFile[];
 }

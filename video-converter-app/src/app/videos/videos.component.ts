@@ -19,8 +19,7 @@ export class VideosComponent implements OnInit {
     'bitrate',
     'codec',
     'resolution',
-    'availableResolutions',
-    'thumbnails',
+    'status',
   ];
   dataSource = new MatTableDataSource<Video>();
   isLoading = true;

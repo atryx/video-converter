@@ -61,6 +61,20 @@
       </li>
     </ul>
   </div>
+  <div class="video-detail-item" *ngIf="video.hlsFiles.length > 0">
+    <mat-label>Available resolutions: </mat-label>
+    <ul>
+      <li *ngFor="let hls of video.hlsFiles">
+        <button
+          mat-raised-button
+          color="link"
+          (click)="download(hls.fileDirectory, hls.filename)"
+        >
+          {{ hls.filename }}
+        </button>
+      </li>
+    </ul>
+  </div>
   <div class="video-detail-item">
     <mat-form-field appearance="fill">
       <mat-label>Select output resolution</mat-label>
