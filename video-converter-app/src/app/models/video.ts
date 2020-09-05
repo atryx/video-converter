@@ -3,6 +3,7 @@ import { Thumbnail } from './thumbnail';
 export interface Video {
   id: number;
   filename: string;
+  fileDirectory: string;
   duration: string;
   bitRate: string;
   codecName: string;

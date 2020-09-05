@@ -26,8 +26,8 @@ export class VideoService {
     return this.http.get<Video>(`${this.videoURL}/${id}`);
   }
 
-  convertToFormat(formData): Observable<Video> {
-    return this.http.post<Video>(this.videoURL, formData);
+  uploadFile(formData): Observable<Video> {
+    return this.http.post<Video>(`${this.videoURL}/upload`, formData);
   }
 
   convertToFormatById(body): Observable<Video> {

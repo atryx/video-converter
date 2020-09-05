@@ -1,7 +1,7 @@
-import { Component, OnInit, ViewChild, Input } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { VideoService } from '../video.service';
 import { Video } from '../models/video';
 
@@ -21,7 +21,6 @@ export class VideosComponent implements OnInit {
     'resolution',
     'availableResolutions',
     'thumbnails',
-    'delete',
   ];
   dataSource = new MatTableDataSource<Video>();
   isLoading = true;
@@ -38,6 +37,7 @@ export class VideosComponent implements OnInit {
       (videos) => {
         this.isLoading = false;
         this.dataSource.data = videos;
+        console.log(videos);
       },
       (error) => {
         console.log(error);
@@ -48,29 +48,5 @@ export class VideosComponent implements OnInit {
 
   onSelect(id: number): void {
     console.log('on select clicked', id);
-  }
-
-  openDialog(id: number) {
-    const dialogRef = this.dialog.open(DialogContentExampleDialog);
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result?.event) console.log('delete video');
-      else console.log('do nothing');
-    });
-  }
-}
-
-@Component({
-  selector: 'dialog-content-example-dialog',
-  templateUrl: 'dialog-content-example-dialog.html',
-})
-export class DialogContentExampleDialog {
-  constructor(public dialogRef: MatDialogRef<DialogContentExampleDialog>) {}
-
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
-  onConfirmClick(): void {
-    this.dialogRef.close({ event: true });
   }
 }

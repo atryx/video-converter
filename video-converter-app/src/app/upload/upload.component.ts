@@ -11,13 +11,6 @@ import { VideoService } from '../video.service';
 export class UploadComponent implements OnInit {
   @ViewChild('fileInput', { static: false }) fileInput: ElementRef;
   file;
-  selectedValue: string;
-
-  formats: OutputFormat[] = [
-    { value: 'Hd480', viewValue: 'HD 480p' },
-    { value: 'Hd720', viewValue: 'HD 720p' },
-    { value: 'Hd1080', viewValue: 'HD 1080p' },
-  ];
 
   constructor(private videoService: VideoService, private router: Router) {}
 
@@ -30,18 +23,15 @@ export class UploadComponent implements OnInit {
     };
     fileInput.click();
   }
-
-  onFileSelect(event) {
-    console.log(event);
+  deselectFile() {
+    this.file = '';
   }
 
   callVideoService() {
-    this.fileInput.nativeElement.value = '';
     const formData = new FormData();
     formData.append('UploadedFile', this.file);
-    formData.append('outputFormat', this.selectedValue);
 
-    this.videoService.convertToFormat(formData).subscribe(
+    this.videoService.uploadFile(formData).subscribe(
       (video) => {
         this.router.navigate(['video', video.id]);
       },

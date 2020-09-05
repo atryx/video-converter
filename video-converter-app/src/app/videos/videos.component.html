@@ -41,7 +41,7 @@
 
     <!-- Codec Column -->
     <ng-container matColumnDef="codec">
-      <th mat-header-cell *matHeaderCellDef>CodecName</th>
+      <th mat-header-cell *matHeaderCellDef>Codec</th>
       <td mat-cell *matCellDef="let video">{{ video.codecName }}</td>
     </ng-container>
 
@@ -55,7 +55,7 @@
     <ng-container matColumnDef="availableResolutions">
       <th mat-header-cell *matHeaderCellDef>Other Resolutions</th>
       <td mat-cell *matCellDef="let video">
-        {{ video.availableResolutions.join(", ") }}
+        <span *ngFor="let res of video.availableResolutions"> Hd480p</span>
       </td>
     </ng-container>
 
@@ -63,18 +63,10 @@
     <ng-container matColumnDef="thumbnails">
       <th mat-header-cell *matHeaderCellDef>Thumbnails</th>
       <td mat-cell *matCellDef="let video">
-        {{ video.thumbnails.join(", ") }}
+        <span *ngFor="let thumbnail of video.thumbnails">
+          {{ thumbnail.name }}</span
+        >
       </td>
-    </ng-container>
-
-    <!-- Delete Column -->
-    <ng-container matColumnDef="delete">
-      <th mat-header-cell *matHeaderCellDef>Delete</th>
-      <mat-cell *matCellDef="let video">
-        <button mat-mini-fab color="primary" (click)="openDialog(video.Id)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-cell>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -86,16 +78,9 @@
     showFirstLastButtons
   ></mat-paginator>
 </div>
-<div
-  *ngIf="dataSource?.data?.length == 0"
-  style="
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: white;
-  "
->
-  There are currently no videos added. Click here to start
+<div *ngIf="dataSource?.data?.length == 0" id="center-display">
+  There are currently no videos added. Click&nbsp;
+  <a href="#" [routerLink]="['/uploads']"> here </a>&nbsp; to start
 </div>
 
 <div

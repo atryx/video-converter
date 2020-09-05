@@ -1,1 +1,13 @@
 @import "@angular/material/prebuilt-themes/deeppurple-amber.css";
+
+#center-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}
+.error-message {
+  font-weight: bolder;
+  font-size: 18px;
+  color: red;
+}

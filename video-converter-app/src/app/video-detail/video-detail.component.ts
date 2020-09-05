@@ -15,6 +15,7 @@ export class VideoDetailComponent implements OnInit {
   selectedValue: string;
   video: Video;
   isLoading = true;
+  error: string;
 
   formats: OutputFormat[] = [
     { value: 'Hd480', viewValue: 'HD 480p' },
@@ -29,11 +30,11 @@ export class VideoDetailComponent implements OnInit {
   ngOnInit(): void {
     this._Activatedroute.paramMap.subscribe((params) => {
       this.id = params.get('id');
-      this.getVideos(this.id);
+      this.getVideo(this.id);
     });
   }
 
-  getVideos(id: number) {
+  getVideo(id: number) {
     this.videoService.getVideoById(id).subscribe(
       (video) => {
         this.video = video;
@@ -42,7 +43,7 @@ export class VideoDetailComponent implements OnInit {
       },
       (error) => {
         this.isLoading = false;
-        console.log(error);
+        this.handleError(error);
       }
     );
   }
@@ -55,11 +56,10 @@ export class VideoDetailComponent implements OnInit {
         (video) => {
           this.video = video;
           this.isLoading = false;
-          console.log(this.video);
         },
         (error) => {
           this.isLoading = false;
-          console.log(error);
+          this.handleError(error);
         }
       );
   }
@@ -72,11 +72,10 @@ export class VideoDetailComponent implements OnInit {
         (video) => {
           this.video = video;
           this.isLoading = false;
-          console.log(this.video);
         },
         (error) => {
           this.isLoading = false;
-          console.log(error);
+          this.handleError(error);
         }
       );
   }
@@ -92,19 +91,18 @@ export class VideoDetailComponent implements OnInit {
         (video) => {
           this.video = video;
           this.isLoading = false;
-          console.log(this.video);
         },
         (error) => {
           this.isLoading = false;
-          console.log(error);
+          this.handleError(error);
         }
       );
   }
 
   download(fileLocation, fileName) {
     this.isLoading = true;
-    console.log('download clicked', fileLocation);
-    this.videoService.downloadFile(fileLocation).subscribe((response) => {
+    const fullFilePath = fileLocation + '\\' + fileName;
+    this.videoService.downloadFile(fullFilePath).subscribe((response) => {
       console.log(response);
       this.isLoading = false;
 
@@ -119,8 +117,16 @@ export class VideoDetailComponent implements OnInit {
     }),
       (error) => {
         this.isLoading = false;
-        console.log('Error downloading the file');
+        this.handleError(error);
       },
       () => console.info('File downloaded successfully');
+  }
+
+  handleError(error) {
+    if (error.status == 0 || error.status == 500) {
+      this.error = 'Something went wrong. Please contact developer';
+    } else {
+      this.error = error.error;
+    }
   }
 }

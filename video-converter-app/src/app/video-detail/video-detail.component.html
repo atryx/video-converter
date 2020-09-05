@@ -1,64 +1,67 @@
-<p>video-detail works!</p>
-<form *ngIf="!isLoading">
-  <div>
+<form *ngIf="!isLoading && video">
+  <div class="video-detail-item">
     <mat-label>Filename: </mat-label>
     <button
       mat-raised-button
       color="link"
-      (click)="download(video.filename, video.filename)"
+      (click)="download(video.fileDirectory, video.filename)"
     >
       {{ video.filename }}
     </button>
   </div>
-  <div>
+  <div class="video-detail-item">
     <mat-label>Duration: </mat-label>
     <span> {{ video.duration }} </span>
   </div>
-  <div>
+  <div class="video-detail-item">
     <mat-label>Resolution: </mat-label>
     <span> {{ video.resolution }} </span>
   </div>
-  <div>
+  <div class="video-detail-item">
     <mat-label>Size: </mat-label>
     <span> {{ video.size }} </span>
   </div>
-  <div>
+  <div class="video-detail-item">
+    <mat-label>Bitrate: </mat-label>
+    <span> {{ video.bitRate }} </span>
+  </div>
+  <div class="video-detail-item">
     <mat-label>Codec: </mat-label>
     <span> {{ video.codecName }} </span>
   </div>
-  <div>
+  <div class="video-detail-item">
     <mat-label>Status: </mat-label>
     <span> {{ video.status }} </span>
   </div>
-  <div>
+  <div class="video-detail-item" *ngIf="video.thumbnails.length > 0">
     <mat-label>Thumbnails: </mat-label>
     <ul>
       <li *ngFor="let thumb of video.thumbnails">
         <button
           mat-raised-button
           color="link"
-          (click)="download(thumb.fileLocation, thumb.name)"
+          (click)="download(thumb.fileDirectory, thumb.name)"
         >
           {{ thumb.name }}
         </button>
       </li>
     </ul>
   </div>
-  <div>
+  <div class="video-detail-item" *ngIf="video.availableResolutions.length > 0">
     <mat-label>Available resolutions: </mat-label>
     <ul>
       <li *ngFor="let res of video.availableResolutions">
         <button
           mat-raised-button
           color="link"
-          (click)="download(res.filename, res.filename)"
+          (click)="download(res.fileDirectory, res.filename)"
         >
           {{ res.filename }}
         </button>
       </li>
     </ul>
   </div>
-  <div>
+  <div class="video-detail-item">
     <mat-form-field appearance="fill">
       <mat-label>Select output resolution</mat-label>
       <mat-select [(ngModel)]="selectedValue" name="food">
@@ -68,29 +71,39 @@
       </mat-select>
     </mat-form-field>
   </div>
-
   <div mat-card-actions>
     <button mat-raised-button [routerLink]="['/videos']">Back</button>
-    <button mat-raised-button color="primary" (click)="convertToOutput()">
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!selectedValue"
+      (click)="convertToOutput()"
+    >
       Convert to output
     </button>
-    <button mat-raised-button color="primary" (click)="generateHLS()">
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!selectedValue"
+      (click)="generateHLS()"
+    >
       Generate HLS
     </button>
-    <button mat-raised-button color="primary" (click)="getThumbnails()">
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!video"
+      (click)="getThumbnails()"
+    >
       Get Thumbnails
     </button>
   </div>
 </form>
 
-<div
-  *ngIf="isLoading"
-  style="
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: white;
-  "
->
+<div *ngIf="isLoading" id="center-display">
   <mat-spinner></mat-spinner>
+</div>
+
+<div *ngIf="!video" id="center-display" class="error-message">
+  <span>{{ error }}</span>
 </div>

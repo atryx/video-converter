@@ -1,7 +1,7 @@
 export interface Thumbnail {
   id: number;
   name: string;
-  fileLocation: string;
+Up  fileDirectory: string;
   format: string;
   timestamp: string;
 }
