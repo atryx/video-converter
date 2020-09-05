@@ -127,7 +127,7 @@ namespace VideoApp.Web.Services
             _jobRunner.Enqueue(new FFmpegArguments()
             {
                 ParentVideoId = videoFile.Id,
-                InputFile = videoFile.Filename,
+                InputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename),
                 OutputFormat = hlsDTO.OutputFormat,
                 Operation = OperationType.HLS
             });
@@ -138,23 +138,34 @@ namespace VideoApp.Web.Services
 
         public async Task<List<HLSFile>> SaveHLSBatch(string path, OutputFormat format, int parentVideoId)
         {
-
-            var savedFiles = Directory.GetFiles(path, $"{format}*");
-            var hlsFiles = new List<HLSFile>();
-            foreach (var file in savedFiles)
+            try
             {
-                var extension = file.Substring(file.LastIndexOf('.'));
-                var hls = new HLSFile
+                var savedFiles = Directory
+                        .EnumerateFiles(path)
+                        .Where(file => file.Contains(format.ToString()) && (file.ToLower().EndsWith("ts") || file.ToLower().EndsWith("m3u8")))
+                        .ToList();
+
+                
+                foreach (var file in savedFiles)
                 {
-                    Filename = file,
-                    ParentVideoId = parentVideoId,
-                    HLSType = extension.Equals("m3u8") ? HLSType.Playlist : HLSType.PartialVideo
-                };
-                hlsFiles.Add(hls);
+                    var extension = file.Substring(file.LastIndexOf('.'));
+                    var hls = new HLSFile
+                    {
+                        Filename = Path.GetFileName(file),
+                        FileDirectory = Directory.GetParent(file).Name,
+                        ParentVideoFileId = parentVideoId,
+                        HLSType = extension.Equals("m3u8") ? HLSType.Playlist : HLSType.PartialVideo
+                    };
+
+                    _dbContext.HLS.Add(hls);
+                }
+                
+                await _dbContext.SaveChangesAsync();
+                return new List<HLSFile>();
+            }catch(Exception e)
+            {
+                throw new Exception(e.Message);
             }
-            _dbContext.HLS.AddRange(hlsFiles);
-            await _dbContext.SaveChangesAsync();
-            return hlsFiles;
         }
 
         void c_JobFinished(object sender, CustomEventArgs e)

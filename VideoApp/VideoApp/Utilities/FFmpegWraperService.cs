@@ -83,11 +83,10 @@ namespace VideoApp.Web.Utilities
             string convertParams = "-profile:v main -crf 20 -sc_threshold 0 -g 48 -keyint_min 48 -hls_time 4 -hls_playlist_type vod ";
             var videoSize = ConvertEnum(format);
             string inputFile = Path.Combine(_basePath, "Uploads", inputPath);
-            string fileDirectory = inputFile.Substring(0, inputFile.LastIndexOf('.'));
-            if (!Directory.Exists(fileDirectory))
-            {
-                Directory.CreateDirectory(fileDirectory);
-            }
+            
+            string fileDirectory = Directory.GetParent(inputFile).Name;
+            string fullDirectory = Path.Combine(_basePath, "Uploads", fileDirectory);
+
             IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(inputFile);
             IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
                  ?.SetCodec(VideoCodec.h264)
@@ -100,16 +99,15 @@ namespace VideoApp.Web.Utilities
             switch (videoSize)
             {                
                 case VideoSize.Hd480:
-                    convertParams += $"-b:v 1400k -maxrate 1498k -bufsize 2100k -b:a 128k -hls_segment_filename {fileDirectory}\\480p_%03d.ts {fileDirectory}\\480p.m3u8";
+                    convertParams += $"-b:v 1400k -maxrate 1498k -bufsize 2100k -b:a 128k -hls_segment_filename {fullDirectory}\\{format}_%03d.ts {fullDirectory}\\{format}.m3u8";
                     break;
                 case VideoSize.Hd720:
-                    convertParams += $"-b:v 2800k -maxrate 2996k -bufsize 4200k -b:a 128k -hls_segment_filename {fileDirectory}\\720p_%03d.ts {fileDirectory}\\720p.m3u8";
+                    convertParams += $"-b:v 2800k -maxrate 2996k -bufsize 4200k -b:a 128k -hls_segment_filename {fullDirectory}\\{format}_%03d.ts {fullDirectory}\\{format}.m3u8";
                     break;
                 case VideoSize.Hd1080:
-                    convertParams += $"-b:v 5000k -maxrate 5350k -bufsize 7500k -b:a 192k -hls_segment_filename {fileDirectory}\\1080p_%03d.ts {fileDirectory}\\1080p.m3u8";
+                    convertParams += $"-b:v 5000k -maxrate 5350k -bufsize 7500k -b:a 192k -hls_segment_filename {fullDirectory}\\{format}_%03d.ts {fullDirectory}\\{format}.m3u8";
                     break;                
                 default:
-                    convertParams += $"-b:v 800k -maxrate 856k -bufsize 1200k -b:a 96k -hls_segment_filename {fileDirectory}\\default_%03d.ts {fileDirectory}\\default.m3u8";
                     break;
             }
 
@@ -118,7 +116,7 @@ namespace VideoApp.Web.Utilities
                     .AddParameter(convertParams)
                     .Start();
 
-            return fileDirectory;
+            return fullDirectory;
         }
 
         public async Task<IMediaInfo> GetMediaInfo(string inputPath)

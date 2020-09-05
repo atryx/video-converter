@@ -15,6 +15,6 @@ namespace VideoApp.Web.Models.ViewModels
         public string Status { get; set; }
         public List<VideoFileModel> AvailableResolutions { get; set; }
         public List<ThumbnailModel> Thumbnails { get; set; }
-        //public List<HLSFile> HLSFiles { get; set; }
+        public List<HLSFileModel> HLSFiles { get; set; }
     }
 }

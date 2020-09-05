@@ -17,6 +17,8 @@ namespace VideoApp.Web.Profiles
                 .ReverseMap();
             CreateMap<OutputFormat,VideoSize>();
             CreateMap<Thumbnail, ThumbnailModel>();
+
+            CreateMap<HLSFile, HLSFileModel>();
             CreateMap<IMediaInfo, VideoFile>()
                 .ForMember(dest => dest.Width, opt => opt.MapFrom(src => src.VideoStreams.FirstOrDefault().Width))
                 .ForMember(dest => dest.Height, opt => opt.MapFrom(src => src.VideoStreams.FirstOrDefault().Height))
