@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using System.Linq;
-using VideoApp.Web.Models;
 using VideoApp.Web.Models.Entities;
 using VideoApp.Web.Models.ViewModels;
 using Xabe.FFmpeg;
@@ -15,9 +14,7 @@ namespace VideoApp.Web.Profiles
                 .ForMember(dest => dest.Resolution, opt => opt.MapFrom(src => $"{src.Width}:{src.Height}"))
                 .ForMember(dest => dest.CodecName, opt => opt.MapFrom(src => src.Codec))
                 .ReverseMap();
-            CreateMap<OutputFormat,VideoSize>();
             CreateMap<Thumbnail, ThumbnailModel>();
-
             CreateMap<HLSFile, HLSFileModel>();
             CreateMap<IMediaInfo, VideoFile>()
                 .ForMember(dest => dest.Width, opt => opt.MapFrom(src => src.VideoStreams.FirstOrDefault().Width))

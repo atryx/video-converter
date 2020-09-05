@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -90,14 +89,9 @@ namespace VideoApp.Controllers
             {
                 return BadRequest("Invalid data model");
             }
-            try
-            {
-                var result = await _videoConverterService.ConvertFromExistingVideo(videoDTO);
-                return Ok(result);
-            }catch(Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }        
+
+            var result = await _videoConverterService.ConvertFromExistingVideo(videoDTO);
+            return Ok(result);
+        }
     }
 }

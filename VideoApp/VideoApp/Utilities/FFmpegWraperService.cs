@@ -14,13 +14,11 @@ namespace VideoApp.Web.Utilities
     public class FFmpegWraperService : IFFmpegWraperService
     {
         private IHostEnvironment _hostingEnvironment;
-        private IMapper _mapper;
         private string _basePath;
 
-        public FFmpegWraperService(IHostEnvironment hostingEnvironment, IMapper mapper)
+        public FFmpegWraperService(IHostEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
-            _mapper = mapper;
             _basePath = _hostingEnvironment.ContentRootPath;
 
             if (string.IsNullOrEmpty(FFmpeg.ExecutablesPath))
@@ -33,7 +31,7 @@ namespace VideoApp.Web.Utilities
         {
             var videoSize = ConvertEnum(format);
             string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));            
+            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
             string output = Path.Combine(_basePath, "Uploads", outputFile);
 
             IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
@@ -57,7 +55,7 @@ namespace VideoApp.Web.Utilities
             string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
             string basePath = Path.Combine(_basePath, "Uploads");
             string parentDirectory = Directory.GetParent(inputPath).Name;
-                        
+
             var thumbnails = new List<Thumbnail>();
             foreach (var second in wantedSeconds)
             {
@@ -67,15 +65,15 @@ namespace VideoApp.Web.Utilities
                 thumbnail.Timestamp = TimeSpan.FromSeconds(second);
                 thumbnail.Format = "png";
                 thumbnails.Add(thumbnail);
-                IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath, 
-                    $"{basePath}\\{thumbnail.FileDirectory}\\{thumbnail.Name}", 
+                IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath,
+                    $"{basePath}\\{thumbnail.FileDirectory}\\{thumbnail.Name}",
                     TimeSpan.FromSeconds(second));
                 IConversionResult result = await conversion.Start();
 
             }
 
             return thumbnails;
-            
+
         }
 
         public async Task<string> GenerateHLS(string inputPath, OutputFormat format)
@@ -83,7 +81,7 @@ namespace VideoApp.Web.Utilities
             string convertParams = "-profile:v main -crf 20 -sc_threshold 0 -g 48 -keyint_min 48 -hls_time 4 -hls_playlist_type vod ";
             var videoSize = ConvertEnum(format);
             string inputFile = Path.Combine(_basePath, "Uploads", inputPath);
-            
+
             string fileDirectory = Directory.GetParent(inputFile).Name;
             string fullDirectory = Path.Combine(_basePath, "Uploads", fileDirectory);
 
@@ -97,7 +95,7 @@ namespace VideoApp.Web.Utilities
                 ?.SetSampleRate(48000);
 
             switch (videoSize)
-            {                
+            {
                 case VideoSize.Hd480:
                     convertParams += $"-b:v 1400k -maxrate 1498k -bufsize 2100k -b:a 128k -hls_segment_filename {fullDirectory}\\{format}_%03d.ts {fullDirectory}\\{format}.m3u8";
                     break;
@@ -106,7 +104,7 @@ namespace VideoApp.Web.Utilities
                     break;
                 case VideoSize.Hd1080:
                     convertParams += $"-b:v 5000k -maxrate 5350k -bufsize 7500k -b:a 192k -hls_segment_filename {fullDirectory}\\{format}_%03d.ts {fullDirectory}\\{format}.m3u8";
-                    break;                
+                    break;
                 default:
                     break;
             }
@@ -121,34 +119,20 @@ namespace VideoApp.Web.Utilities
 
         public async Task<IMediaInfo> GetMediaInfo(string inputPath)
         {
-            try
-            {
-                var mediaInfo =  await FFmpeg.GetMediaInfo(inputPath);
-                return mediaInfo;
-            }catch(Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var mediaInfo = await FFmpeg.GetMediaInfo(inputPath);
+            return mediaInfo;
+
         }
 
         private VideoSize ConvertEnum(OutputFormat format)
         {
-            VideoSize videoSize;
-            switch (format)
+            var videoSize = format switch
             {
-                case OutputFormat.Hd480:
-                    videoSize = VideoSize.Hd480;
-                    break;
-                case OutputFormat.Hd720:
-                    videoSize = VideoSize.Hd720;
-                    break;
-                case OutputFormat.Hd1080:
-                    videoSize = VideoSize.Hd1080;
-                    break;
-                default:
-                    videoSize = VideoSize.Hd720;
-                    break;
-            }
+                OutputFormat.Hd480 => VideoSize.Hd480,
+                OutputFormat.Hd720 => VideoSize.Hd720,
+                OutputFormat.Hd1080 => VideoSize.Hd1080,
+                _ => VideoSize.Hd720,
+            };
             return videoSize;
         }
     }

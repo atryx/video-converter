@@ -28,9 +28,7 @@ namespace VideoApp
             services.AddControllers().AddNewtonsoftJson();
             services.AddAutoMapper(typeof(Startup));
 
-            services.AddDbContext<VideoInformationContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("VideoConverterDatabase"))
-                , ServiceLifetime.Singleton);
+            services.AddDbContext<VideoInformationContext>(ServiceLifetime.Transient);
 
             services.AddCors(options =>
             {
@@ -45,7 +43,7 @@ namespace VideoApp
 
 
             services.AddScoped<IVideoConverterService, VideoConverterService>();
-            services.AddSingleton<IFFmpegWraperService, FFmpegWraperService>();
+            services.AddScoped<IFFmpegWraperService, FFmpegWraperService>();
             services.AddScoped<IFileManagerService, FileManagerService>();
             services.AddScoped<IJobRunnerQueue, JobRunnerQueue>();
         }

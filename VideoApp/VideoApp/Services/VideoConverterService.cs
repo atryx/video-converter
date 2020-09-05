@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,156 +40,175 @@ namespace VideoApp.Web.Services
 
         public async Task<VideoFileModel> UploadFile(FileUploadDTO fileUpload)
         {
-            var uniqueDirectory = Guid.NewGuid().ToString();
-            _fileManagerService.CreateVideoDirectory(uniqueDirectory);
-            var fileLocation = Path.Combine(uniqueDirectory, fileUpload.UploadedFile.FileName);
-            var filePath = await _fileManagerService.SaveTempFile(fileUpload.UploadedFile, fileLocation);
-            var mediaInfo = await  _ffmpeg.GetMediaInfo(filePath);
-            var videoFile = _mapper.Map<VideoFile>(mediaInfo);
-            videoFile.Filename = fileUpload.UploadedFile.FileName;
-            videoFile.FileDirectory = uniqueDirectory;
-            _dbContext.Videos.Add(videoFile);
-            await _dbContext.SaveChangesAsync();
-
-            return _mapper.Map<VideoFileModel>(videoFile);
-        }
-
-       
-
-        public async Task UpdateVideoStatus(int id, Status status)
-        {
-            var video = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == id);
-            video.Status = status;
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<VideoFile> SaveVideoFile(string fileName, int parentId = default, Status status = default)
-        {
-            try {
-                var mediaInfo = await _ffmpeg.GetMediaInfo(fileName);
-                var videoFile = _mapper.Map<VideoFile>(mediaInfo);
-                videoFile.ParentVideoFileId = parentId;
-                videoFile.Filename = Path.GetFileName(fileName);
-                videoFile.FileDirectory = _fileManagerService.GetParentDirectory(fileName);
-                videoFile.Status = status;
-                _dbContext.Videos.Add(videoFile);
-                await _dbContext.SaveChangesAsync();
-                return videoFile;
-            } catch (Exception e)
+            try
             {
-                throw new Exception(e.Message);
+                var uniqueDirectory = Guid.NewGuid().ToString();
+                _fileManagerService.CreateVideoDirectory(uniqueDirectory);
+                var fileLocation = Path.Combine(uniqueDirectory, fileUpload.UploadedFile.FileName);
+                var filePath = await _fileManagerService.SaveTempFile(fileUpload.UploadedFile, fileLocation);
+                var mediaInfo = await _ffmpeg.GetMediaInfo(filePath);
+                var videoFile = _mapper.Map<VideoFile>(mediaInfo);
+                videoFile.Filename = fileUpload.UploadedFile.FileName;
+                videoFile.FileDirectory = uniqueDirectory;
+                await _dbContext.Videos.AddAsync(videoFile);
+                await _dbContext.SaveChangesAsync();
+
+                return _mapper.Map<VideoFileModel>(videoFile);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
             }
         }       
 
+        public async Task<VideoFile> SaveVideoFile(string fileName, int parentId = default, Status status = default)
+        {
+            try
+            {
+                using (var dbContext = new VideoInformationContext())
+                {
+                    var mediaInfo = await _ffmpeg.GetMediaInfo(fileName);
+                    var videoFile = _mapper.Map<VideoFile>(mediaInfo);
+                    videoFile.ParentVideoFileId = parentId;
+                    videoFile.Filename = Path.GetFileName(fileName);
+                    videoFile.FileDirectory = _fileManagerService.GetParentDirectory(fileName);
+                    videoFile.Status = status;
+                    await dbContext.Videos.AddAsync(videoFile);
+                    await dbContext.SaveChangesAsync();
+                    return videoFile;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
+        }
+
         public async Task<List<VideoFileModel>> GetAvailableVideos()
         {
-            var dbList = await _dbContext.Videos.Where(v => v.ParentVideoFileId == null)
-                .Include("AvailableResolutions")
-                .Include("Thumbnails")
-                .Include("HLSFiles")
-                .ToListAsync();
+            try
+            {
+                var dbList = await _dbContext.Videos.Where(v => v.ParentVideoFileId == null)
+                    .Include("AvailableResolutions")
+                    .Include("Thumbnails")
+                    .Include("HLSFiles")
+                    .ToListAsync();
 
-            return _mapper.Map<List<VideoFileModel>>(dbList);
+                return _mapper.Map<List<VideoFileModel>>(dbList);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
         }
 
-        private async Task<VideoFile> GetVideo(int videoId)
-        {
-            var videoFile = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == videoId);
-            return videoFile;
-        }
+        
 
         public async Task<VideoFileModel> GetVideoModel(int id)
         {
-            var videoFile = await _dbContext.Videos
-                .Include("Thumbnails")
-                .Include("AvailableResolutions")
-                .Include("HLSFiles")
-                .FirstOrDefaultAsync(v => v.Id == id);
-            var result = _mapper.Map<VideoFileModel>(videoFile);
-            return result;
+            try
+            {
+                var videoFile = await _dbContext.Videos
+                    .Include("Thumbnails")
+                    .Include("AvailableResolutions")
+                    .Include("HLSFiles")
+                    .FirstOrDefaultAsync(v => v.Id == id);
+                var result = _mapper.Map<VideoFileModel>(videoFile);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
         }
 
         public async Task<VideoFileModel> GenerateThumbnails(ThumbnailDTO thumbnailDTO)
         {
-            var videoFile = await GetVideo(thumbnailDTO.VideoId);
-            string inputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename);
-            var addedThumbnails = await _ffmpeg.GetVideoThumbails(inputFile, thumbnailDTO.TimestampOfScreenshots);
-            addedThumbnails.ForEach(t => t.ParentVideoFileId = videoFile.Id);
-            _dbContext.Thumbnails.AddRange(addedThumbnails);
-            await _dbContext.SaveChangesAsync();
-            return _mapper.Map<VideoFileModel>(videoFile);
+            try
+            {
+                var videoFile = await GetVideo(thumbnailDTO.VideoId);
+                string inputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename);
+                var addedThumbnails = await _ffmpeg.GetVideoThumbails(inputFile, thumbnailDTO.TimestampOfScreenshots);
+                addedThumbnails.ForEach(t => t.ParentVideoFileId = videoFile.Id);
+                await _dbContext.Thumbnails.AddRangeAsync(addedThumbnails);
+                await _dbContext.SaveChangesAsync();
+                return _mapper.Map<VideoFileModel>(videoFile);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
 
         }
 
         public async Task<VideoFileModel> GenerateHLS(ConvertVideoDTO hlsDTO)
         {
-            var videoFile = await GetVideo(hlsDTO.VideoId);
-
-            _jobRunner.Enqueue(new FFmpegArguments()
+            try
             {
-                ParentVideoId = videoFile.Id,
-                InputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename),
-                OutputFormat = hlsDTO.OutputFormat,
-                Operation = OperationType.HLS
-            });
-            _jobRunner.JobFinished += c_JobFinished;
+                var videoFile = await GetVideo(hlsDTO.VideoId);
+                await UpdateVideoStatus(videoFile.Id, Status.Processing);
 
-            return _mapper.Map<VideoFileModel>(videoFile);
+                _jobRunner.Enqueue(new FFmpegArguments()
+                {
+                    ParentVideoId = videoFile.Id,
+                    InputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename),
+                    OutputFormat = hlsDTO.OutputFormat,
+                    Operation = OperationType.HLS
+                });
+                _jobRunner.JobFinished += c_JobFinished;
+
+                return _mapper.Map<VideoFileModel>(videoFile);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
         }
 
         public async Task<List<HLSFile>> SaveHLSBatch(string path, OutputFormat format, int parentVideoId)
         {
             try
             {
-                var savedFiles = Directory
-                        .EnumerateFiles(path)
-                        .Where(file => file.Contains(format.ToString()) && (file.ToLower().EndsWith("ts") || file.ToLower().EndsWith("m3u8")))
-                        .ToList();
-
-                
-                foreach (var file in savedFiles)
+                using (var dbContext = new VideoInformationContext())
                 {
-                    var extension = file.Substring(file.LastIndexOf('.'));
-                    var hls = new HLSFile
+                    var savedFiles = Directory
+                            .EnumerateFiles(path)
+                            .Where(file => file.Contains(format.ToString()) && (file.ToLower().EndsWith("ts") || file.ToLower().EndsWith("m3u8")))
+                            .ToList();
+
+
+                    foreach (var file in savedFiles)
                     {
-                        Filename = Path.GetFileName(file),
-                        FileDirectory = Directory.GetParent(file).Name,
-                        ParentVideoFileId = parentVideoId,
-                        HLSType = extension.Equals("m3u8") ? HLSType.Playlist : HLSType.PartialVideo
-                    };
+                        var extension = file.Substring(file.LastIndexOf('.'));
+                        var hls = new HLSFile
+                        {
+                            Filename = Path.GetFileName(file),
+                            FileDirectory = Directory.GetParent(file).Name,
+                            ParentVideoFileId = parentVideoId,
+                            HLSType = extension.Equals("m3u8") ? HLSType.Playlist : HLSType.PartialVideo
+                        };
 
-                    _dbContext.HLS.Add(hls);
-                }
-                
-                await _dbContext.SaveChangesAsync();
-                return new List<HLSFile>();
-            }catch(Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
+                        await dbContext.HLS.AddAsync(hls);
+                    }
 
-        void c_JobFinished(object sender, CustomEventArgs e)
-        {
-            try
-            {
-                if (e.Operation.Equals(OperationType.Conversion))
-                {
-                    UpdateVideoStatus(e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
-                    SaveVideoFile(e.OutputFile, e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
-                }
-                else
-                {
-                    SaveHLSBatch(e.OutputFile,OutputFormat.Hd480, e.ParentVideoFileId).GetAwaiter();
+                    await dbContext.SaveChangesAsync();
+                    return new List<HLSFile>();
                 }
             }
             catch (Exception ex)
             {
-
-                throw new Exception(ex.Message);
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
             }
-
         }
+
+       
 
         public async Task<FileStream> DownloadFile(string fileName)
         {
@@ -197,30 +217,97 @@ namespace VideoApp.Web.Services
                 var result = await _fileManagerService.GetFile(fileName);
                 return result;
             }
-            catch(Exception e)
+            catch (Exception ex)
             {
-                throw new Exception(e.Message);
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
             }
         }
 
         public async Task<VideoFileModel> ConvertFromExistingVideo(ConvertVideoDTO video)
         {
-            var videoFile = await GetVideo(video.VideoId);
-            await UpdateVideoStatus(videoFile.Id, Status.Processing);
-            string outFilename = $"{video.OutputFormat.ToString()}{videoFile.Filename.Substring(videoFile.Filename.LastIndexOf('.'))}";
-            string outputFile = Path.Combine(videoFile.FileDirectory, outFilename);
-
-            _jobRunner.Enqueue(new FFmpegArguments()
+            try
             {
-                OutputFile = outputFile,
-                ParentVideoId = videoFile.Id,
-                InputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename),
-                OutputFormat = video.OutputFormat,
-                Operation = OperationType.Conversion
-            });
-            _jobRunner.JobFinished += c_JobFinished;
+                var videoFile = await GetVideo(video.VideoId);
+                await UpdateVideoStatus(videoFile.Id, Status.Processing);
+                string outFilename = $"{video.OutputFormat.ToString()}{videoFile.Filename.Substring(videoFile.Filename.LastIndexOf('.'))}";
+                string outputFile = Path.Combine(videoFile.FileDirectory, outFilename);
 
-            return _mapper.Map<VideoFileModel>(videoFile);
+                _jobRunner.Enqueue(new FFmpegArguments()
+                {
+                    OutputFile = outputFile,
+                    ParentVideoId = videoFile.Id,
+                    InputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename),
+                    OutputFormat = video.OutputFormat,
+                    Operation = OperationType.Conversion
+                });
+                _jobRunner.JobFinished += c_JobFinished;
+
+                return _mapper.Map<VideoFileModel>(videoFile);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
+
+        }
+
+        private async Task UpdateVideoStatus(int id, Status status)
+        {
+            try
+            {
+                using(var dbContext = new VideoInformationContext())
+                {
+                    var video = await dbContext.Videos.FirstOrDefaultAsync(v => v.Id == id);
+                    video.Status = status;
+                    await dbContext.SaveChangesAsync();
+                }
+              
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
+
+        }
+
+        private async Task<VideoFile> GetVideo(int videoId)
+        {
+            try
+            {
+                var videoFile = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == videoId);
+                return videoFile;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
+        }
+
+        private void c_JobFinished(object sender, CustomEventArgs e)
+        {
+            try
+            {
+                UpdateVideoStatus(e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+
+                if (e.Operation.Equals(OperationType.Conversion))
+                {                    
+                    SaveVideoFile(e.OutputFile, e.ParentVideoFileId, Status.DoneProcessing).GetAwaiter();
+                }
+                else
+                {
+                    SaveHLSBatch(e.OutputFile, OutputFormat.Hd480, e.ParentVideoFileId).GetAwaiter();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Internal server error");
+            }
+
         }
     }
 }

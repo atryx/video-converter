@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using VideoApp.Web.JobQueue;
 using VideoApp.Web.Models;
 using VideoApp.Web.Utilities;
@@ -14,20 +13,12 @@ namespace VideoApp.Web.TaskRunner
 
         private Queue<object> _jobs = new Queue<object>();
         private bool _delegateQueuedOrRunning = false;
-        //private BlockingCollection<object> _jobs = new BlockingCollection<object>();
         private readonly IFFmpegWraperService _ffmpegWraper;
 
         public JobRunnerQueue(IFFmpegWraperService ffmpegWraper)
         {
             _ffmpegWraper = ffmpegWraper;
         }
-
-        //public JobRunnerQueue()
-        //{
-        //    var thread = new Thread(new ThreadStart(OnStart));
-        //    thread.IsBackground = true;
-        //    thread.Start();
-        //}
 
         public void Enqueue(object job)
         {
@@ -80,17 +71,6 @@ namespace VideoApp.Web.TaskRunner
                 }
             }
         }
-
-        //private void OnStart()
-        //{
-        //    foreach (var job in _jobs.GetConsumingEnumerable(CancellationToken.None))
-        //    {
-        //        var item = (ProcessStartParameters)job;
-        //        var result = _commandExecuter.ExecuteCommand(item);
-        //        var myEvents = new CustomEventArgs(item.ParentVideoFileId, item.ConvertedVideoFullPath, result);
-        //        OnJobFinished(myEvents);
-        //    }
-        //}
 
         protected virtual void OnJobFinished(CustomEventArgs e)
         {
