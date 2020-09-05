@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -23,16 +24,23 @@ namespace VideoApp.Controllers
             _videoConverterService = videoConverterService;
         }
 
-        [HttpPost]
+        [HttpPost("upload")]
         [RequestSizeLimit(60000000)]
-        public async Task<ActionResult<VideoFileModel>> UploadFile([FromForm]FileUploadDTO fileUploadDTO)
+        public async Task<ActionResult<VideoFileModel>> Upload([FromForm]FileUploadDTO fileUploadDTO)
         {
             if(!ModelState.IsValid)
             {
                 return BadRequest("Invalid data model");
             }
-            var result = await _videoConverterService.ConvertToOtherFormat(fileUploadDTO);
+            var result = await _videoConverterService.UploadFile(fileUploadDTO);
             return Ok(result);
+        }
+
+        [HttpGet("download/{filename}")]
+        public async Task<ActionResult<FileStream>> Download(string filename)
+        {
+            var file = await _videoConverterService.DownloadFile(filename);
+            return Ok(file);
         }
 
         [HttpGet]
@@ -46,35 +54,50 @@ namespace VideoApp.Controllers
         public async Task<ActionResult<List<VideoFileModel>>> GetVideo(int videoId)
         {
             var result = await _videoConverterService.GetVideoModel(videoId);
+            if (result is null)
+            {
+                return NotFound($"Video with id {videoId} was not found");
+            }
             return Ok(result);
         }
 
         [HttpPost("thumbnails")]
         public async Task<ActionResult<VideoFileModel>> GenerateThumbnails([FromBody]ThumbnailDTO thumbnailDTO)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data model");
+            }
             var result = await _videoConverterService.GenerateThumbnails(thumbnailDTO);
             return Ok(result);
         }
 
         [HttpPost("hls")]
-        public async Task<ActionResult<VideoFileModel>> GenerateHLS([FromBody]ConvertVideoDTO hlsDTO)
+        public async Task<ActionResult<VideoFileModel>> GenerateHLS([FromBody]ConvertVideoDTO videoDTO)
         {
-            var result = await _videoConverterService.GenerateHLS(hlsDTO);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data model");
+            }
+            var result = await _videoConverterService.GenerateHLS(videoDTO);
             return Ok(result);
         }
 
         [HttpPost("convert")]
-        public async Task<ActionResult<VideoFileModel>> ConvertFromExistingVideo([FromBody]ConvertVideoDTO hlsDTO)
+        public async Task<ActionResult<VideoFileModel>> ConvertToOtherFormat([FromBody]ConvertVideoDTO videoDTO)
         {
-            var result = await _videoConverterService.ConvertFromExistingVideo(hlsDTO);
-            return Ok(result);
-        }
-
-        [HttpGet("download/{filename}")]
-        public async Task<ActionResult<FileStream>> Download(string filename)
-        {
-            var file = await _videoConverterService.DownloadFile(filename);
-            return Ok(file);
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data model");
+            }
+            try
+            {
+                var result = await _videoConverterService.ConvertFromExistingVideo(videoDTO);
+                return Ok(result);
+            }catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }        
     }
 }

@@ -45,7 +45,7 @@ namespace VideoApp
 
 
             services.AddScoped<IVideoConverterService, VideoConverterService>();
-            services.AddScoped<IFFmpegWraperService, FFmpegWraperService>();
+            services.AddSingleton<IFFmpegWraperService, FFmpegWraperService>();
             services.AddScoped<IFileManagerService, FileManagerService>();
             services.AddScoped<IJobRunnerQueue, JobRunnerQueue>();
         }

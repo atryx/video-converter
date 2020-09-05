@@ -7,7 +7,5 @@ namespace VideoApp.Web.Models
     {
         [Required]
         public IFormFile UploadedFile { get; set; }
-        [Required]
-        public OutputFormat OutputFormat { get; set; }        
     }
 }

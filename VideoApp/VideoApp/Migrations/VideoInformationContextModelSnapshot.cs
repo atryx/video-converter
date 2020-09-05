@@ -19,27 +19,6 @@ namespace VideoApp.Web.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("VideoApp.Web.Models.AvailableResolution", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Resolution")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AvailableResolutions");
-                });
-
             modelBuilder.Entity("VideoApp.Web.Models.Entities.HLSFile", b =>
                 {
                     b.Property<int>("Id")
@@ -47,7 +26,10 @@ namespace VideoApp.Web.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("FileName")
+                    b.Property<string>("FileDirectory")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Filename")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("HLSType")
@@ -73,7 +55,7 @@ namespace VideoApp.Web.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("FileLocation")
+                    b.Property<string>("FileDirectory")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Format")
@@ -110,6 +92,9 @@ namespace VideoApp.Web.Migrations
 
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
+
+                    b.Property<string>("FileDirectory")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Filename")
                         .HasColumnType("nvarchar(max)");

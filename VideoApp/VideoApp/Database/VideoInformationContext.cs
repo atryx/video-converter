@@ -12,17 +12,12 @@ namespace VideoApp.Web.Database
 
         }
 
-
-
-        public DbSet<AvailableResolution> AvailableResolutions { get; set; }
         public DbSet<VideoFile> Videos { get; set; }
         public DbSet<Thumbnail> Thumbnails { get; set; }
-
         public DbSet<HLSFile> HLS { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AvailableResolution>().ToTable("AvailableResolutions");
             modelBuilder.Entity<VideoFile>()
                 .Property(e => e.Status)
                  .HasConversion(

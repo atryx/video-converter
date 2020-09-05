@@ -6,6 +6,7 @@ namespace VideoApp.Web.Models.ViewModels
     {
         public int Id { get; set; }
         public string Filename { get; set; }
+        public string FileDirectory { get; set; }
         public string Duration { get; set; }
         public string Size { get; set; }
         public string BitRate { get; set; }

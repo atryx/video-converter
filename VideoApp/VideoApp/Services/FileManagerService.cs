@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using VideoApp.Web.Models.ViewModels;
 
 namespace VideoApp.Web.Services
 {
@@ -52,10 +49,25 @@ namespace VideoApp.Web.Services
             }
         }
 
+        public void CreateVideoDirectory(string directoryName)
+        {
+            var fullpath =  Path.Combine(_hostingEnvironment.ContentRootPath, "Uploads", directoryName);
+            if (!Directory.Exists(fullpath))
+            {
+                Directory.CreateDirectory(fullpath);
+            }
+
+        }
+
         public async Task<FileStream> GetFile(string fileName)
         {
             var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, "Uploads", fileName);
             return await Task.FromResult(new FileStream(filePath, FileMode.Open, FileAccess.Read));            
+        }
+
+        public string GetParentDirectory(string filename)
+        {
+            return Directory.GetParent(filename).Name;
         }
     }
 }

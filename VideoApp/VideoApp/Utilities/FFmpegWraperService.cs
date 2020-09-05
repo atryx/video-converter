@@ -29,10 +29,11 @@ namespace VideoApp.Web.Utilities
             }
         }
 
-        public async Task ConvertToOtherFormat(string inputFile, string outputFile, OutputFormat format)
+        public async Task<string> ConvertToOtherFormat(string inputFile, string outputFile, OutputFormat format)
         {
             var videoSize = ConvertEnum(format);
-            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputFile));
+            string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
+            IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));            
             string output = Path.Combine(_basePath, "Uploads", outputFile);
 
             IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
@@ -47,28 +48,27 @@ namespace VideoApp.Web.Utilities
                 .AddStream(audioStream, videoStream)
                 .SetOutput(output)
                 .Start();
+
+            return output;
         }
 
         public async Task<List<Thumbnail>> GetVideoThumbails(string inputFile, List<int> wantedSeconds)
         {
             string inputPath = Path.Combine(_basePath, "Uploads", inputFile);
             string basePath = Path.Combine(_basePath, "Uploads");
-            string fileDirectory = inputPath.Substring(0, inputPath.LastIndexOf('.'));
-            if (!Directory.Exists(fileDirectory))
-            {
-                Directory.CreateDirectory(fileDirectory);
-            }
+            string parentDirectory = Directory.GetParent(inputPath).Name;
+                        
             var thumbnails = new List<Thumbnail>();
             foreach (var second in wantedSeconds)
             {
                 var thumbnail = new Thumbnail();
                 thumbnail.Name = $"Thumnbail_{second}.png";
-                thumbnail.FileLocation = $"{inputFile.Substring(0, inputFile.LastIndexOf('.'))}\\{thumbnail.Name}";
+                thumbnail.FileDirectory = parentDirectory;
                 thumbnail.Timestamp = TimeSpan.FromSeconds(second);
                 thumbnail.Format = "png";
                 thumbnails.Add(thumbnail);
                 IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(inputPath, 
-                    $"{basePath}\\{thumbnail.FileLocation}", 
+                    $"{basePath}\\{thumbnail.FileDirectory}\\{thumbnail.Name}", 
                     TimeSpan.FromSeconds(second));
                 IConversionResult result = await conversion.Start();
 
@@ -123,7 +123,14 @@ namespace VideoApp.Web.Utilities
 
         public async Task<IMediaInfo> GetMediaInfo(string inputPath)
         {
-            return await FFmpeg.GetMediaInfo(Path.Combine(_basePath, "Uploads", inputPath));
+            try
+            {
+                var mediaInfo =  await FFmpeg.GetMediaInfo(inputPath);
+                return mediaInfo;
+            }catch(Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         private VideoSize ConvertEnum(OutputFormat format)

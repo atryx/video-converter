@@ -9,6 +9,7 @@ namespace VideoApp.Web.Models.Entities
         [Key]
         public int Id { get; set; }
         public string Filename { get; set; }
+        public string FileDirectory { get; set; }
         public TimeSpan Duration { get; set; }
         public long Size { get; set; }
         public string Codec { get; set; }

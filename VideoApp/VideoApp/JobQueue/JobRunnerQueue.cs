@@ -62,8 +62,8 @@ namespace VideoApp.Web.TaskRunner
                     var ffmpegArguments = (FFmpegArguments)item;
                     if (ffmpegArguments.Operation.Equals(OperationType.Conversion))
                     {
-                        await _ffmpegWraper.ConvertToOtherFormat(ffmpegArguments.InputFile, ffmpegArguments.OutputFile, ffmpegArguments.OutputFormat);
-                        var myEvents = new CustomEventArgs(ffmpegArguments.ParentVideoId, ffmpegArguments.OutputFile, ffmpegArguments.Operation);
+                        var fileLocation = await _ffmpegWraper.ConvertToOtherFormat(ffmpegArguments.InputFile, ffmpegArguments.OutputFile, ffmpegArguments.OutputFormat);
+                        var myEvents = new CustomEventArgs(ffmpegArguments.ParentVideoId, fileLocation, ffmpegArguments.Operation);
                         OnJobFinished(myEvents);
                     }
                     else

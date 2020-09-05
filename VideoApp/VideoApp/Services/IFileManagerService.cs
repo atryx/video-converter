@@ -9,5 +9,7 @@ namespace VideoApp.Web.Services
         Task<bool> DeleteTempFile(string fullPath);
         Task<string> SaveTempFile(IFormFile file, string fileName);
         Task<FileStream> GetFile(string fileName);
+        void CreateVideoDirectory(string directoryName);
+        string GetParentDirectory(string filename);
     }
 }

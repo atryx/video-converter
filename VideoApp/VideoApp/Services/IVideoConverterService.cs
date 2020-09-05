@@ -9,7 +9,7 @@ namespace VideoApp.Web.Services
 {
     public interface IVideoConverterService
     {
-        Task<VideoFileModel> ConvertToOtherFormat(FileUploadDTO path);
+        Task<VideoFileModel> UploadFile(FileUploadDTO path);
 
         Task<List<VideoFileModel>> GetAvailableVideos();
 

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -38,31 +37,18 @@ namespace VideoApp.Web.Services
             _ffmpeg = ffmpeg;
         }
 
-        public async Task<VideoFileModel> ConvertToOtherFormat(FileUploadDTO fileUpload)
+        public async Task<VideoFileModel> UploadFile(FileUploadDTO fileUpload)
         {
-            string convertCommandArguments = string.Empty;
-            string uniqueFileName = Guid.NewGuid() + "_" + fileUpload.UploadedFile.FileName;
-            string fullFilePath = await _fileManagerService.SaveTempFile(fileUpload.UploadedFile, uniqueFileName);
-            string outputFile = $"{uniqueFileName.Substring(0, uniqueFileName.LastIndexOf('.'))}_" +
-                $"{fileUpload.OutputFormat}." +
-                $"{uniqueFileName.Substring(uniqueFileName.LastIndexOf('.'))}";
-            var mediaInfo = await  _ffmpeg.GetMediaInfo(uniqueFileName);
+            var uniqueDirectory = Guid.NewGuid().ToString();
+            _fileManagerService.CreateVideoDirectory(uniqueDirectory);
+            var fileLocation = Path.Combine(uniqueDirectory, fileUpload.UploadedFile.FileName);
+            var filePath = await _fileManagerService.SaveTempFile(fileUpload.UploadedFile, fileLocation);
+            var mediaInfo = await  _ffmpeg.GetMediaInfo(filePath);
             var videoFile = _mapper.Map<VideoFile>(mediaInfo);
-            videoFile.Filename = uniqueFileName;
+            videoFile.Filename = fileUpload.UploadedFile.FileName;
+            videoFile.FileDirectory = uniqueDirectory;
             _dbContext.Videos.Add(videoFile);
             await _dbContext.SaveChangesAsync();
-
-            int id = videoFile.Id;
-
-            _jobRunner.Enqueue(new FFmpegArguments()
-            {
-                OutputFile = outputFile,
-                ParentVideoId = id,
-                InputFile = uniqueFileName,
-                OutputFormat = fileUpload.OutputFormat,
-                Operation = OperationType.Conversion
-            });
-            _jobRunner.JobFinished += c_JobFinished;
 
             return _mapper.Map<VideoFileModel>(videoFile);
         }
@@ -78,14 +64,20 @@ namespace VideoApp.Web.Services
 
         public async Task<VideoFile> SaveVideoFile(string fileName, int parentId = default, Status status = default)
         {
-            var mediaInfo = await _ffmpeg.GetMediaInfo(fileName);
-            var videoFile = _mapper.Map<VideoFile>(mediaInfo);
-            videoFile.ParentVideoFileId = parentId;
-            videoFile.Filename = fileName;
-            videoFile.Status = status;
-            _dbContext.Videos.Add(videoFile);
-            await _dbContext.SaveChangesAsync();
-            return videoFile;
+            try {
+                var mediaInfo = await _ffmpeg.GetMediaInfo(fileName);
+                var videoFile = _mapper.Map<VideoFile>(mediaInfo);
+                videoFile.ParentVideoFileId = parentId;
+                videoFile.Filename = Path.GetFileName(fileName);
+                videoFile.FileDirectory = _fileManagerService.GetParentDirectory(fileName);
+                videoFile.Status = status;
+                _dbContext.Videos.Add(videoFile);
+                await _dbContext.SaveChangesAsync();
+                return videoFile;
+            } catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }       
 
         public async Task<List<VideoFileModel>> GetAvailableVideos()
@@ -107,7 +99,11 @@ namespace VideoApp.Web.Services
 
         public async Task<VideoFileModel> GetVideoModel(int id)
         {
-            var videoFile = await _dbContext.Videos.FirstOrDefaultAsync(v => v.Id == id);
+            var videoFile = await _dbContext.Videos
+                .Include("Thumbnails")
+                .Include("AvailableResolutions")
+                .Include("HLSFiles")
+                .FirstOrDefaultAsync(v => v.Id == id);
             var result = _mapper.Map<VideoFileModel>(videoFile);
             return result;
         }
@@ -115,8 +111,8 @@ namespace VideoApp.Web.Services
         public async Task<VideoFileModel> GenerateThumbnails(ThumbnailDTO thumbnailDTO)
         {
             var videoFile = await GetVideo(thumbnailDTO.VideoId);
-      
-            var addedThumbnails = await _ffmpeg.GetVideoThumbails(videoFile.Filename, thumbnailDTO.TimestampOfScreenshots);
+            string inputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename);
+            var addedThumbnails = await _ffmpeg.GetVideoThumbails(inputFile, thumbnailDTO.TimestampOfScreenshots);
             addedThumbnails.ForEach(t => t.ParentVideoFileId = videoFile.Id);
             _dbContext.Thumbnails.AddRange(addedThumbnails);
             await _dbContext.SaveChangesAsync();
@@ -150,7 +146,7 @@ namespace VideoApp.Web.Services
                 var extension = file.Substring(file.LastIndexOf('.'));
                 var hls = new HLSFile
                 {
-                    FileName = file,
+                    Filename = file,
                     ParentVideoId = parentVideoId,
                     HLSType = extension.Equals("m3u8") ? HLSType.Playlist : HLSType.PartialVideo
                 };
@@ -199,15 +195,15 @@ namespace VideoApp.Web.Services
         public async Task<VideoFileModel> ConvertFromExistingVideo(ConvertVideoDTO video)
         {
             var videoFile = await GetVideo(video.VideoId);
-            string outputFile = $"{videoFile.Filename.Substring(0, videoFile.Filename.LastIndexOf('.'))}_" +
-                $"{video.OutputFormat}." +
-                $"{videoFile.Filename.Substring(videoFile.Filename.LastIndexOf('.'))}";
+            await UpdateVideoStatus(videoFile.Id, Status.Processing);
+            string outFilename = $"{video.OutputFormat.ToString()}{videoFile.Filename.Substring(videoFile.Filename.LastIndexOf('.'))}";
+            string outputFile = Path.Combine(videoFile.FileDirectory, outFilename);
 
             _jobRunner.Enqueue(new FFmpegArguments()
             {
                 OutputFile = outputFile,
                 ParentVideoId = videoFile.Id,
-                InputFile = videoFile.Filename,
+                InputFile = Path.Combine(videoFile.FileDirectory, videoFile.Filename),
                 OutputFormat = video.OutputFormat,
                 Operation = OperationType.Conversion
             });
