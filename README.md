@@ -18,6 +18,7 @@ For the frontend application: - Angular 10, scaffolded using @angular-cli
     - Convert that video to another format: Hd480, Hd720, Hd1080 using the h264 codec
     - Generate the HLS VOD using the options for formats as above
     - Generate thumbnails of the parent video(at the moment it extracts from second 1 and 3 of the parent video)
+    - Download any of the above generated files
 
 # Consideration and limitations
 
@@ -26,3 +27,7 @@ This project servers as demo purposes and some of the things are implemented acc
     - local queue that processes requests based on the order they arrive, since video editing is an expensive operation and thus risking the connection to time out
     - files are saved on disk in detriment of db
     - the FE app calls the server every 15 seconds to get the updated list of videos. Could be improved in the future with websockets
+    - no files are returned either when getting the list of videos or only one video
+    - error handling and validations are minimalistic
+    - for demo purpose CORS settings allows all methods and headers
+    - no security concerns have been taken in consideration
