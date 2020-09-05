@@ -21,7 +21,8 @@ For the frontend application: - Angular 10, scaffolded using @angular-cli
 
 # Consideration and limitations
 
-This project servers as demo purposes and some of the things are implemented accordingly: 
-    - local queue that processes requests based on the order they arrive, since video editing is an expensive operation and thus risking the connection to time out 
-    - files are saved on disk in detriment of db 
+This project servers as demo purposes and some of the things are implemented accordingly:
+
+    - local queue that processes requests based on the order they arrive, since video editing is an expensive operation and thus risking the connection to time out
+    - files are saved on disk in detriment of db
     - the FE app calls the server every 15 seconds to get the updated list of videos. Could be improved in the future with websockets
